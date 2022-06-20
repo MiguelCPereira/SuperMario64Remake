@@ -1,4 +1,4 @@
-# SuperMario64Remake
+# Super Mario 64 Remake
 
 This project started its development during the spring of 2022 as an exam assignment for the "Graphics Programming 2" course at Howest University (part of the [Game Development](http://www.digitalartsandentertainment.be/page/31/Game+Development) major). The main goal of the exam was to develop a short game using DirectX and HLSL, showcasing concepts such as Hardware Skinning, Shadow Mapping, Post Proccessing Effects, amongst others.
 
