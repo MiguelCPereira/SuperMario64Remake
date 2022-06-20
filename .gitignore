@@ -1,0 +1,17 @@
+# Ignore everything in repository root 
+/*
+
+# Files to not ignore
+!/.gitignore
+!/.README.md
+
+# Folder to not ignore
+!/Build/
+!/Screenshots/
+
+# Folders to ignore only partially
+!/Source/
+/Source/.vs/
+/Source/_build/
+/Source/_intermidiate/
+/Source/OverlordEngine/_build/

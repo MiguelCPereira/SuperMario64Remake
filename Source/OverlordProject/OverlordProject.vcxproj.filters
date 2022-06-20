@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MainGame.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Scenes\Week 3\MinionScene.cpp" />
+    <ClCompile Include="Materials\ColorMaterial.cpp" />
+    <ClCompile Include="Prefabs\SpherePrefab.cpp" />
+    <ClCompile Include="Prefabs\TorusPrefab.cpp" />
+    <ClCompile Include="Prefabs\CubePrefab.cpp" />
+    <ClCompile Include="Scenes\Week 3\ComponentTestScene.cpp" />
+    <ClCompile Include="Scenes\Week 3\PongScene.cpp" />
+    <ClCompile Include="Scenes\Week 4\ModelTestScene.cpp" />
+    <ClCompile Include="Materials\DiffuseMaterial.cpp" />
+    <ClCompile Include="Scenes\Week 4\UberMaterialScene.cpp" />
+    <ClCompile Include="Materials\UberMaterial.cpp" />
+    <ClCompile Include="Materials\SpikyMaterial.cpp" />
+    <ClCompile Include="Scenes\Week 4\SpikyScene.cpp" />
+    <ClCompile Include="Scenes\Week 4\SpriteTestScene.cpp" />
+    <ClCompile Include="Scenes\Week 5\FontTestScene.cpp" />
+    <ClCompile Include="Prefabs\Character.cpp" />
+    <ClCompile Include="Scenes\Week 5\CharacterScene.cpp" />
+    <ClCompile Include="Scenes\Week 5\PickingScene.cpp" />
+    <ClCompile Include="Prefabs\BoneObject.cpp" />
+    <ClCompile Include="Scenes\Week 6\SoftwareSkinningScene_1.cpp" />
+    <ClCompile Include="Scenes\Week 6\SoftwareSkinningScene_2.cpp" />
+    <ClCompile Include="Scenes\Week 6\SoftwareSkinningScene_3.cpp" />
+    <ClCompile Include="Scenes\Week 7\HardwareSkinningScene.cpp" />
+    <ClCompile Include="Materials\DiffuseMaterial_Skinned.cpp" />
+    <ClCompile Include="Scenes\Week 8\ShadowMappingScene.cpp" />
+    <ClCompile Include="Materials\Shadow\DiffuseMaterial_Shadow.cpp" />
+    <ClCompile Include="Materials\Shadow\DiffuseMaterial_Shadow_Skinned.cpp" />
+    <ClCompile Include="Scenes\Week 9\ParticleScene.cpp" />
+    <ClCompile Include="Scenes\Week 10\PostProcessingScene.cpp" />
+    <ClCompile Include="Materials\Post\PostGrayscale.cpp" />
+    <ClCompile Include="Materials\Post\PostBlur.cpp" />
+    <ClCompile Include="Scenes\Mario64\MainScene.cpp" />
+    <ClCompile Include="Prefabs\Mario-Specific\MarioCharacter.cpp" />
+    <ClCompile Include="Prefabs\Mario-Specific\GoombaCharacter.cpp" />
+    <ClCompile Include="Prefabs\Mario-Specific\BoBombCharacter.cpp" />
+    <ClCompile Include="Prefabs\Mario-Specific\ExplosionAnimation.cpp" />
+    <ClCompile Include="Prefabs\Mario-Specific\SquishedGoomba.cpp" />
+    <ClCompile Include="Scenes\Mario64\StartScreen.cpp" />
+    <ClCompile Include="Scenes\Mario64\VictoryScreen.cpp" />
+    <ClCompile Include="Prefabs\Mario-Specific\Star.cpp" />
+    <ClCompile Include="Prefabs\Mario-Specific\CannonballCharacter.cpp" />
+    <ClCompile Include="Materials\Post\PostColor.cpp" />
+    <ClCompile Include="Materials\Post\PostTransition.cpp" />
+    <ClCompile Include="Scenes\Mario64\DeathScreen.cpp" />
+    <ClCompile Include="Materials\PureDiffuseMaterial.cpp" />
+    <ClCompile Include="Prefabs\Mario-Specific\Tube.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MainGame.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Scenes\Week 3\MinionScene.h" />
+    <ClInclude Include="Materials\ColorMaterial.h" />
+    <ClInclude Include="Prefabs\SpherePrefab.h" />
+    <ClInclude Include="Prefabs\TorusPrefab.h" />
+    <ClInclude Include="Prefabs\CubePrefab.h" />
+    <ClInclude Include="Scenes\Week 3\ComponentTestScene.h" />
+    <ClInclude Include="Scenes\Week 3\PongScene.h" />
+    <ClInclude Include="Scenes\Week 4\ModelTestScene.h" />
+    <ClInclude Include="Materials\DiffuseMaterial.h" />
+    <ClInclude Include="Scenes\Week 4\UberMaterialScene.h" />
+    <ClInclude Include="Materials\UberMaterial.h" />
+    <ClInclude Include="Materials\SpikyMaterial.h" />
+    <ClInclude Include="Scenes\Week 4\SpikyScene.h" />
+    <ClInclude Include="Scenes\Week 4\SpriteTestScene.h" />
+    <ClInclude Include="Scenes\Week 5\FontTestScene.h" />
+    <ClInclude Include="Prefabs\Character.h" />
+    <ClInclude Include="Scenes\Week 5\CharacterScene.h" />
+    <ClInclude Include="Scenes\Week 5\PickingScene.h" />
+    <ClInclude Include="Prefabs\BoneObject.h" />
+    <ClInclude Include="Scenes\Week 6\SoftwareSkinningScene_1.h" />
+    <ClInclude Include="Scenes\Week 6\SoftwareSkinningScene_2.h" />
+    <ClInclude Include="Scenes\Week 6\SoftwareSkinningScene_3.h" />
+    <ClInclude Include="Scenes\Week 7\HardwareSkinningScene.h" />
+    <ClInclude Include="Materials\DiffuseMaterial_Skinned.h" />
+    <ClInclude Include="Scenes\Week 8\ShadowMappingScene.h" />
+    <ClInclude Include="Materials\Shadow\DiffuseMaterial_Shadow_Skinned.h" />
+    <ClInclude Include="Materials\Shadow\DiffuseMaterial_Shadow.h" />
+    <ClInclude Include="Scenes\Week 9\ParticleScene.h" />
+    <ClInclude Include="Scenes\Week 10\PostProcessingScene.h" />
+    <ClInclude Include="Materials\Post\PostGrayscale.h" />
+    <ClInclude Include="Materials\Post\PostBlur.h" />
+    <ClInclude Include="Scenes\Mario64\MainScene.h" />
+    <ClInclude Include="Prefabs\Mario-Specific\MarioCharacter.h" />
+    <ClInclude Include="Prefabs\Mario-Specific\GoombaCharacter.h" />
+    <ClInclude Include="Prefabs\Mario-Specific\BoBombCharacter.h" />
+    <ClInclude Include="Prefabs\Mario-Specific\ExplosionAnimation.h" />
+    <ClInclude Include="Prefabs\Mario-Specific\SquishedGoomba.h" />
+    <ClInclude Include="Scenes\Mario64\StartScreen.h" />
+    <ClInclude Include="Scenes\Mario64\VictoryScreen.h" />
+    <ClInclude Include="Prefabs\Mario-Specific\Star.h" />
+    <ClInclude Include="Prefabs\Mario-Specific\CannonballCharacter.h" />
+    <ClInclude Include="Materials\Post\PostColor.h" />
+    <ClInclude Include="Materials\Post\PostTransition.h" />
+    <ClInclude Include="Scenes\Mario64\DeathScreen.h" />
+    <ClInclude Include="Materials\PureDiffuseMaterial.h" />
+    <ClInclude Include="Prefabs\Mario-Specific\Tube.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\Textures\TestSprite.jpg" />
+  </ItemGroup>
+</Project>

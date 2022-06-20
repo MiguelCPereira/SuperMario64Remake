@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)_build\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)_intermediate\$(Configuration)\</IntDir>
+    <IncludePath>$(GP2_LIBS)\PhysX\include;$(GP2_LIBS)\FX11\include;$(GP2_LIBS)\FMOD\include;$(GP2_LIBS)\DirectXTex\include;$(GP2_LIBS)\vld\include;$(GP2_LIBS)\imgui\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(GP2_LIBS)\vld\lib\$(Configuration);$(GP2_LIBS)\DirectXTex\lib\$(Configuration);$(GP2_LIBS)\FMOD\lib\$(Configuration);$(GP2_LIBS)\FX11\lib\$(Configuration);$(GP2_LIBS)\PhysX\lib\$(Configuration);$(GP2_LIBS)\imgui\lib\$(Configuration);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <PostBuildEvent>
+      <Command>xcopy "$(GP2_LIBS)\PhysX\bin\$(Configuration)\*" "$(OutDir)" /y /D 
+xcopy "$(GP2_LIBS)\FMOD\bin\$(Configuration)\*" "$(OutDir)" /y /D 
+xcopy "$(GP2_LIBS)\vld\bin\$(Configuration)\*" "$(OutDir)" /y /D
+xcopy "$(ProjectDir)Resources\*" "$(OutDir)\Resources\*" /y /D /s </Command>
+    </PostBuildEvent>
+    <ClCompile>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+    </ClCompile>
+    <ClCompile>
+      <ExternalTemplatesDiagnostics>false</ExternalTemplatesDiagnostics>
+    </ClCompile>
+    <ClCompile>
+      <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

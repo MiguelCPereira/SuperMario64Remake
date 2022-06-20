@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{634CFE8D-455C-45BF-94F0-BD0AAB13E0E6}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>OverlordEngine</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\OverlordEngine_x64.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\OverlordEngine_x64.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(SolutionDir)_intermediate\OverlordEngine\$(Configuration)\</IntDir>
+    <OutDir>_build\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(SolutionDir)_intermediate\OverlordEngine\$(Configuration)\</IntDir>
+    <OutDir>_build\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir)</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <Lib>
+      <IgnoreAllDefaultLibraries>
+      </IgnoreAllDefaultLibraries>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;OVERLORDENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Components\ControllerComponent.h" />
+    <ClInclude Include="Components\ParticleEmitterComponent.h" />
+    <ClInclude Include="Graphics\ShadowMapRenderer.h" />
+    <ClInclude Include="Lab_Todos.h" />
+    <ClInclude Include="Managers\LightManager.h" />
+    <ClInclude Include="Misc\ModelAnimator.h" />
+    <ClInclude Include="Content\SpriteFontLoader.h" />
+    <ClInclude Include="Graphics\TextRenderer.h" />
+    <ClInclude Include="Misc\ParticleMaterial.h" />
+    <ClInclude Include="Misc\PostProcessingMaterial.h" />
+    <ClInclude Include="Misc\ShadowMapMaterial.h" />
+    <ClInclude Include="Prefabs\FixedCamera.h" />
+    <ClInclude Include="Prefabs\FreeCamera.h" />
+    <ClInclude Include="Utils\ImguiHelper.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Misc\Material.h" />
+    <ClInclude Include="Misc\BaseMaterial.h" />
+    <ClInclude Include="Managers\MaterialManager.h" />
+    <ClInclude Include="Misc\MeshFilter.h" />
+    <ClInclude Include="Content\MeshFilterLoader.h" />
+    <ClInclude Include="Components\ModelComponent.h" />
+    <ClInclude Include="Content\PxMeshLoader.h" />
+    <ClInclude Include="Managers\SoundManager.h" />
+    <ClInclude Include="Components\RigidBodyComponent.h" />
+    <ClInclude Include="Managers\InputManager.h" />
+    <ClInclude Include="Components\CameraComponent.h" />
+    <ClInclude Include="Components\BaseComponent.h" />
+    <ClInclude Include="Base\OverlordGame.h" />
+    <ClInclude Include="Components\MeshDrawComponent.h" />
+    <ClInclude Include="Components\MeshIndexedDrawComponent.h" />
+    <ClInclude Include="Content\ContentLoader.h" />
+    <ClInclude Include="Managers\ContentManager.h" />
+    <ClInclude Include="Content\EffectLoader.h" />
+    <ClInclude Include="Graphics\DebugRenderer.h" />
+    <ClInclude Include="Utils\EffectHelper.h" />
+    <ClInclude Include="Utils\BinaryReader.h" />
+    <ClInclude Include="Base\Enumerations.h" />
+    <ClInclude Include="OverlordAPI.h" />
+    <ClInclude Include="Utils\Macros.h" />
+    <ClInclude Include="Utils\PhysxHelper.h" />
+    <ClInclude Include="Components\SpriteComponent.h" />
+    <ClInclude Include="Misc\SpriteFont.h" />
+    <ClInclude Include="Graphics\SpriteRenderer.h" />
+    <ClInclude Include="Misc\TextureData.h" />
+    <ClInclude Include="Content\TextureDataLoader.h" />
+    <ClInclude Include="Utils\Utils.h" />
+    <ClInclude Include="Utils\VertexHelper.h" />
+    <ClInclude Include="Utils\MathHelper.h" />
+    <ClInclude Include="PhysX\PhysxProxy.h" />
+    <ClInclude Include="PhysX\OverlordSimulationFilterShader.h" />
+    <ClInclude Include="PhysX\PhysxErrorCallback.h" />
+    <ClInclude Include="PhysX\PhysxAllocator.h" />
+    <ClInclude Include="Managers\PhysXManager.h" />
+    <ClInclude Include="Base\Logger.h" />
+    <ClInclude Include="Base\GameTime.h" />
+    <ClInclude Include="Base\GameStats.h" />
+    <ClInclude Include="Base\Structs.h" />
+    <ClInclude Include="Utils\Singleton.h" />
+    <ClInclude Include="Scenegraph\GameScene.h" />
+    <ClInclude Include="Scenegraph\GameObject.h" />
+    <ClInclude Include="Misc\RenderTarget.h" />
+    <ClInclude Include="Managers\SceneManager.h" />
+    <ClInclude Include="Components\TransformComponent.h" />
+    <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Components\ControllerComponent.cpp" />
+    <ClCompile Include="Components\ParticleEmitterComponent.cpp" />
+    <ClCompile Include="Graphics\ShadowMapRenderer.cpp" />
+    <ClCompile Include="Managers\LightManager.cpp" />
+    <ClCompile Include="Misc\ModelAnimator.cpp" />
+    <ClCompile Include="Content\SpriteFontLoader.cpp" />
+    <ClCompile Include="Graphics\TextRenderer.cpp" />
+    <ClCompile Include="Misc\ParticleMaterial.cpp" />
+    <ClCompile Include="Misc\PostProcessingMaterial.cpp" />
+    <ClCompile Include="Misc\ShadowMapMaterial.cpp" />
+    <ClCompile Include="Prefabs\FixedCamera.cpp" />
+    <ClCompile Include="Prefabs\FreeCamera.cpp" />
+    <ClCompile Include="Utils\ImguiHelper.cpp" />
+    <ClCompile Include="Misc\Material.cpp" />
+    <ClCompile Include="Misc\BaseMaterial.cpp" />
+    <ClCompile Include="Managers\MaterialManager.cpp" />
+    <ClCompile Include="Misc\MeshFilter.cpp" />
+    <ClCompile Include="Content\MeshFilterLoader.cpp" />
+    <ClCompile Include="Components\ModelComponent.cpp" />
+    <ClCompile Include="Content\PxMeshLoader.cpp" />
+    <ClCompile Include="Managers\SoundManager.cpp" />
+    <ClCompile Include="Components\RigidBodyComponent.cpp" />
+    <ClCompile Include="Managers\InputManager.cpp" />
+    <ClCompile Include="Components\CameraComponent.cpp" />
+    <ClCompile Include="Components\BaseComponent.cpp" />
+    <ClCompile Include="Base\OverlordGame.cpp" />
+    <ClCompile Include="Components\MeshDrawComponent.cpp" />
+    <ClCompile Include="Components\MeshIndexedDrawComponent.cpp" />
+    <ClCompile Include="Managers\ContentManager.cpp" />
+    <ClCompile Include="Content\EffectLoader.cpp" />
+    <ClCompile Include="Graphics\DebugRenderer.cpp" />
+    <ClCompile Include="Utils\EffectHelper.cpp" />
+    <ClCompile Include="Utils\BinaryReader.cpp" />
+    <ClCompile Include="Utils\PhysxHelper.cpp" />
+    <ClCompile Include="Components\SpriteComponent.cpp" />
+    <ClCompile Include="Misc\SpriteFont.cpp" />
+    <ClCompile Include="Graphics\SpriteRenderer.cpp" />
+    <ClCompile Include="Misc\TextureData.cpp" />
+    <ClCompile Include="Content\TextureDataLoader.cpp" />
+    <ClCompile Include="Utils\Utils.cpp" />
+    <ClCompile Include="Utils\VertexHelper.cpp" />
+    <ClCompile Include="PhysX\PhysxProxy.cpp" />
+    <ClCompile Include="PhysX\PhysxErrorCallback.cpp" />
+    <ClCompile Include="Managers\PhysXManager.cpp" />
+    <ClCompile Include="Base\Logger.cpp" />
+    <ClCompile Include="Base\GameTime.cpp" />
+    <ClCompile Include="Base\GameStats.cpp" />
+    <ClCompile Include="Scenegraph\GameScene.cpp" />
+    <ClCompile Include="Scenegraph\GameObject.cpp" />
+    <ClCompile Include="Misc\RenderTarget.cpp" />
+    <ClCompile Include="Managers\SceneManager.cpp" />
+    <ClCompile Include="Components\TransformComponent.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
