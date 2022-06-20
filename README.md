@@ -6,14 +6,10 @@ As such, this project was developed in C++, using a DirectX-based engine named "
 
 I still intend on revisiting this remake later along the summer, but for now a fully playable version is already available.
 
+<br />
+<br />
 
-
-[![Trailer](./Screenshots/Trailer Thumbnail.png)](http://www.youtube.com/watch?v=xonvrfbR3hA "Super Mario 64 Remake - Trailer")
-
-
-
-![01](./Screenshots/Screenshot 02.png)
-![02](./Screenshots/Screenshot 03.png)
+[![Trailer](https://github.com/MiguelCPereira/SuperMario64Remake/blob/main/Screenshots/Trailer%20Thumbnail.png)](http://www.youtube.com/watch?v=xonvrfbR3hA "Super Mario 64 Remake - Trailer")
 
 
 
