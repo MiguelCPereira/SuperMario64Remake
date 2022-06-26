@@ -102,7 +102,12 @@ private:
 
 	// Camera Logic
 	CameraComponent* m_pCameraComponent{};
-	const float m_PitchMax{ 35.f }, m_PitchMin{ 0.f };
+	const float m_PitchMax{ 10.f }, m_PitchMin{ -10.f };
+	XMFLOAT3 m_LastWorldCameraPos{};
+	bool m_RaycastActive{ false };
+	const float m_CameraOffsetDist{ 10.f};
+	float m_CameraCurrentOffsetDist{ 10.f };
+	const float m_CameraVerticalInclination{ 0.1f }; // Between 0.0 and 1.0
 
 
 	// Falling Logic

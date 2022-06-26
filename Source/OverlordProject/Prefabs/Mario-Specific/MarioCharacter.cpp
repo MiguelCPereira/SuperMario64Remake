@@ -24,12 +24,15 @@ void MarioCharacter::Initialize(const SceneContext& sceneContext)
 
 
 	//Camera
-	const auto pCamera = AddChild(new FixedCamera());
+	//const auto pCamera = AddChild(new FixedCamera());
+	const auto pCamera = GetScene()->AddChild(new FixedCamera());
 	m_pCameraComponent = pCamera->GetComponent<CameraComponent>();
 	m_pCameraComponent->SetActive(true);
 	pCamera->GetTransform()->Translate(0.f, m_CharacterDesc.controller.height * .5f, 0.f);
 	pCamera->GetTransform()->Translate(XMLoadFloat3(&pCamera->GetTransform()->GetForward()) * XMLoadFloat3(&m_CharacterDesc.CameraOffset));
-	m_TotalPitch += 13;
+	//m_TotalPitch += 13;
+	m_LastWorldCameraPos = pCamera->GetTransform()->GetWorldPosition();
+
 
 
 	//Character Mesh
@@ -39,7 +42,7 @@ void MarioCharacter::Initialize(const SceneContext& sceneContext)
 	const auto pModel = m_pModelGO->AddComponent(new ModelComponent(L"Meshes/Mario/Mario.ovm"));
 	pModel->SetMaterial(pCharacterMaterial);
 	m_pModelGO->GetTransform()->Scale(5.f, 5.f, 5.f);
-	m_pModelGO->GetTransform()->Translate(0, -m_CharacterDesc.controller.height / 2.f - 0.3f, 0);
+	m_pModelGO->GetTransform()->Translate(0, -m_CharacterDesc.controller.height / 2.f - 0.6f, 0);
 	
 	m_pAnimator = pModel->GetAnimator();
 	pModel->GetTransform()->Rotate(0.f, 180.f, 0.f);
@@ -652,6 +655,131 @@ void MarioCharacter::UpdateJumpTimer(float elapsedTime)
 	}
 }
 
+// Old Camera Movement - smooth, but clips through meshes
+/*void MarioCharacter::HandleCamera(const SceneContext& sceneContext)
+{
+	float elapsedTime = sceneContext.pGameTime->GetElapsed();
+	float finalPitch = m_TotalPitch;
+	//float oldPitch = m_TotalPitch;
+	//float oldYaw = m_TotalYaw;
+
+	// Gamepad
+	bool gamepadMoved = false;
+	if (sceneContext.pInput->IsActionTriggered(m_CharacterDesc.actionId_TurnCameraLeft))
+	{
+		if (m_CameraSoundPlaying == false)
+		{
+			m_CameraSoundPlaying = true;
+			SoundManager::Get()->GetSystem()->playSound(m_pCameraSpinSound, nullptr, false, &m_pCameraSpinChannel);
+		}
+		m_TotalYaw -= m_CharacterDesc.gamepadRotationSpeed * elapsedTime;
+		gamepadMoved = true;
+	}
+	if (sceneContext.pInput->IsActionTriggered(m_CharacterDesc.actionId_TurnCameraRight))
+	{
+		if (m_CameraSoundPlaying == false)
+		{
+			m_CameraSoundPlaying = true;
+			SoundManager::Get()->GetSystem()->playSound(m_pCameraSpinSound, nullptr, false, &m_pCameraSpinChannel);
+		}
+		m_TotalYaw += m_CharacterDesc.gamepadRotationSpeed * elapsedTime;
+		gamepadMoved = true;
+	}
+
+	// Mouse (gamepad has priority)
+	if (gamepadMoved == false)
+	{
+		m_pCameraSpinChannel->setPaused(true);
+		m_CameraSoundPlaying = false;
+		XMFLOAT2 look{ 0.f, 0.f };
+		const auto& mouseMove = InputManager::GetMouseMovement();
+		look.x = static_cast<float>(mouseMove.x);
+		look.y = static_cast<float>(mouseMove.y);
+		m_TotalYaw += look.x * m_CharacterDesc.mouseRotationSpeed * elapsedTime;
+		finalPitch += look.y * m_CharacterDesc.mouseRotationSpeed * elapsedTime;
+	}
+
+	// Lock pitch within limits
+	if (finalPitch < m_PitchMax)
+	{
+		if (finalPitch > m_PitchMin)
+		{
+			m_TotalPitch = finalPitch;
+		}
+		else m_TotalPitch = m_PitchMin;
+	}
+	else m_TotalPitch = m_PitchMax;
+
+	// Rotate the Mario model based on the TotalPitch (X)
+	m_pModelGO->GetTransform()->Rotate(m_TotalPitch, 180, 0);
+
+	// Rotate the Camera based on the TotalPitch (X) and the TotalYaw (Y)
+	auto oldRot = GetTransform()->GetWorldRotation();
+	GetTransform()->Rotate(m_TotalPitch, m_TotalYaw, 0);
+
+	// But make sure it doesn't clip through meshes
+	//// Update the last saved camera position
+	auto posBeforeRot = m_LastWorldCameraPos;
+	m_LastWorldCameraPos = m_pCameraComponent->GetTransform()->GetWorldPosition();
+	//std::cout << "BEF - " << posBeforeRot.x << " / " << posBeforeRot.y << " / " << posBeforeRot.z << '\n';
+	//std::cout << "AFTER - " << posAfterRot.x << " / " << posAfterRot.y << " / " << posAfterRot.z << '\n';
+
+	//// Calculate the raycast origin
+	auto origin = PxVec3(posBeforeRot.x, posBeforeRot.y, posBeforeRot.z);
+
+	//// Get Distance To Between Positions
+	const auto distanceVec = XMLoadFloat3(&m_LastWorldCameraPos) - XMLoadFloat3(&posBeforeRot);
+	PxReal maxDistance{};
+	XMStoreFloat(&maxDistance,XMVector3Length(distanceVec));
+
+	//// Get Normalized Direction Between Positions
+	auto directionVec = XMVector3Normalize(distanceVec);
+	XMFLOAT3 directionXMF{};
+	XMStoreFloat3(&directionXMF, directionVec);
+	const auto direction = PxVec3(directionXMF.x, directionXMF.y, directionXMF.z);
+
+	//XMFLOAT3 distXMF{};
+	//XMStoreFloat3(&distXMF, distanceVec);
+	//std::cout << "DIST - " << distXMF.x << " / " << distXMF.y << " / " << distXMF.z << '\n';
+	//std::cout << "DIR - " << directionXMF.x << " / " << directionXMF.y << " / " << directionXMF.z << '\n';
+	//std::cout << "DISTF - " << maxDistance << '\n';
+
+	//// Set Up All Raycasting Requirements
+	PxRaycastBuffer hit;
+	PxQueryFilterData filterData{};
+	filterData.data.word0 = UINT(CollisionGroup::Group9);
+
+	if (maxDistance > 0.00001f || maxDistance < -0.00001f)
+	{
+		// If, between the old and new position, the camera collides with anything
+		if (GetScene()->GetPhysxProxy()->Raycast(origin, direction, maxDistance, hit, PxHitFlag::eDEFAULT, filterData))
+		{
+			if (m_RaycastActive)
+			{
+				// Move the camera to the collision point
+				const auto collisionPoint = hit.getAnyHit(0).position;
+				//m_pCameraComponent->GetTransform()->Translate(collisionPoint.x, collisionPoint.y, collisionPoint.z);
+				//GetTransform()->Rotate(oldPitch, oldYaw, 0);
+				//m_TotalPitch = oldPitch;
+				//m_TotalYaw = oldYaw;
+				//GetTransform()->Rotate(oldRot.x, oldRot.y, oldRot.z);
+				//m_LastWorldCameraPos = posBeforeRot;
+				std::cout << "oof\n";
+				//m_pCameraComponent->GetTransform()->Translate(posBeforeRot);
+
+				m_pCameraComponent->GetTransform()->Translate(
+					XMLoadFloat3(&m_pCameraComponent->GetTransform()->GetForward()) *
+					XMLoadFloat3(&m_CharacterDesc.CameraOffset) / 4);
+			}
+			else
+			{
+				m_RaycastActive = true;
+			}
+		}
+	}
+}*/
+
+// New Camera Movement - more jagged, but handles most mesh clipping properly
 void MarioCharacter::HandleCamera(const SceneContext& sceneContext)
 {
 	float elapsedTime = sceneContext.pGameTime->GetElapsed();
@@ -704,9 +832,112 @@ void MarioCharacter::HandleCamera(const SceneContext& sceneContext)
 	}
 	else m_TotalPitch = m_PitchMax;
 
-	//Rotate the Mario model based on the TotalPitch (X) and TotalYaw (Y)
-	GetTransform()->Rotate(m_TotalPitch, m_TotalYaw, 0);
-	m_pModelGO->GetTransform()->Rotate(m_TotalPitch, 180, 0);
+	// Rotate the Mario model based on the TotalYaw (Y)
+	GetTransform()->Rotate(0, m_TotalYaw, 0);
+
+	// Rotate the Camera based on the TotalPitch (X) and the TotalYaw (Y)
+	auto cameraOffsetDir = XMFLOAT3(m_pModelGO->GetTransform()->GetForward().x, 0.f, m_pModelGO->GetTransform()->GetForward().z);
+	XMFLOAT3 normalizedCameraOffsetDir{};
+	XMStoreFloat3(&normalizedCameraOffsetDir, XMVector3Normalize(XMLoadFloat3(&cameraOffsetDir)) *
+		(1.f - m_CameraVerticalInclination));
+	normalizedCameraOffsetDir.y += m_CameraVerticalInclination;
+
+	auto cameraOffsetPosVec = XMLoadFloat3(&normalizedCameraOffsetDir) * m_CameraCurrentOffsetDist;
+	XMFLOAT3 cameraFinalPos{};
+	XMStoreFloat3(&cameraFinalPos, cameraOffsetPosVec);
+	cameraFinalPos.x += m_pModelGO->GetTransform()->GetWorldPosition().x;
+	cameraFinalPos.y += m_pModelGO->GetTransform()->GetWorldPosition().y + m_CharacterDesc.controller.height / 2.f + 0.6f;
+	cameraFinalPos.z += m_pModelGO->GetTransform()->GetWorldPosition().z;
+
+	m_pCameraComponent->GetTransform()->Rotate(m_TotalPitch, m_TotalYaw, 0);
+	m_pCameraComponent->GetTransform()->Translate(cameraFinalPos);
+
+	// But make sure it doesn't clip through meshes
+	//// Update the last saved camera position
+	auto posBeforeRot = m_LastWorldCameraPos;
+	m_LastWorldCameraPos = m_pCameraComponent->GetTransform()->GetWorldPosition();
+	//std::cout << "BEF - " << posBeforeRot.x << " / " << posBeforeRot.y << " / " << posBeforeRot.z << '\n';
+	//std::cout << "AFTER - " << posAfterRot.x << " / " << posAfterRot.y << " / " << posAfterRot.z << '\n';
+
+	//// Calculate the raycast origin - the model's center
+	XMFLOAT3 originXMF{ m_pModelGO->GetTransform()->GetWorldPosition().x,
+		m_pModelGO->GetTransform()->GetWorldPosition().y + m_CharacterDesc.controller.height / 2.f + 0.6f,
+		m_pModelGO->GetTransform()->GetWorldPosition().z };
+	PxVec3 origin{ originXMF.x, originXMF.y, originXMF.z };
+
+	//// Get Distance Between New Camera Pos And Model
+	const auto distanceVec = XMLoadFloat3(&m_LastWorldCameraPos) - XMLoadFloat3(&originXMF);
+	PxReal maxDistance{};
+	XMStoreFloat(&maxDistance, XMVector3Length(distanceVec));
+
+	//// Get Normalized Direction Between Positions
+	auto directionVec = XMVector3Normalize(distanceVec);
+	XMFLOAT3 directionXMF{};
+	XMStoreFloat3(&directionXMF, directionVec);
+	const auto direction = PxVec3(directionXMF.x, directionXMF.y, directionXMF.z);
+
+	//XMFLOAT3 distXMF{};
+	//XMStoreFloat3(&distXMF, distanceVec);
+	//std::cout << "DIST - " << distXMF.x << " / " << distXMF.y << " / " << distXMF.z << '\n';
+	//std::cout << "DIR - " << directionXMF.x << " / " << directionXMF.y << " / " << directionXMF.z << '\n';
+	//std::cout << "DISTF - " << maxDistance << '\n';
+
+	//// Set Up All Raycasting Requirements
+	PxRaycastBuffer hit;
+	PxQueryFilterData filterData{};
+	filterData.data.word0 = UINT(CollisionGroup::Group9);
+
+	//if (oldPitch != m_TotalPitch || oldYaw != m_TotalYaw)
+	//{
+		// If the line of sight between the camera and the model is covered
+		if (GetScene()->GetPhysxProxy()->Raycast(origin, direction, maxDistance, hit, PxHitFlag::eDEFAULT, filterData))
+		{
+			if (m_RaycastActive)
+			{
+				// Shorten the camera's distance until adequate
+				std::cout << "oof\n";
+
+				XMFLOAT3 collisionPos{ hit.getAnyHit(static_cast<PxU32>(0)).position.x,
+					hit.getAnyHit(static_cast<PxU32>(0)).position.y, hit.getAnyHit(static_cast<PxU32>(0)).position.z };
+				const auto modelToCollVec = XMLoadFloat3(&collisionPos) - XMLoadFloat3(&originXMF);
+				XMStoreFloat(&m_CameraCurrentOffsetDist, XMVector3Length(modelToCollVec));
+				m_CameraCurrentOffsetDist *= 0.9f;
+
+				cameraOffsetPosVec = XMLoadFloat3(&normalizedCameraOffsetDir) * m_CameraCurrentOffsetDist;
+				XMStoreFloat3(&cameraFinalPos, cameraOffsetPosVec);
+				cameraFinalPos.x += originXMF.x;
+				cameraFinalPos.y += originXMF.y;
+				cameraFinalPos.z += originXMF.z;
+				m_pCameraComponent->GetTransform()->Translate(cameraFinalPos);
+			}
+			else
+			{
+				m_RaycastActive = true;
+			}
+		}
+		else if(m_CameraCurrentOffsetDist < m_CameraOffsetDist)
+		{
+			if (GetScene()->GetPhysxProxy()->Raycast(origin, direction, m_CameraOffsetDist, hit, PxHitFlag::eDEFAULT, filterData))
+			{
+				XMFLOAT3 collisionPos{ hit.getAnyHit(static_cast<PxU32>(0)).position.x,
+					hit.getAnyHit(static_cast<PxU32>(0)).position.y, hit.getAnyHit(static_cast<PxU32>(0)).position.z };
+				const auto modelToCollVec = XMLoadFloat3(&collisionPos) - XMLoadFloat3(&originXMF);
+				XMStoreFloat(&m_CameraCurrentOffsetDist, XMVector3Length(modelToCollVec));
+				m_CameraCurrentOffsetDist *= 0.9f;
+
+				cameraOffsetPosVec = XMLoadFloat3(&normalizedCameraOffsetDir) * m_CameraCurrentOffsetDist;
+				XMStoreFloat3(&cameraFinalPos, cameraOffsetPosVec);
+				cameraFinalPos.x += originXMF.x;
+				cameraFinalPos.y += originXMF.y;
+				cameraFinalPos.z += originXMF.z;
+				m_pCameraComponent->GetTransform()->Translate(cameraFinalPos);
+			}
+			else
+			{
+				m_CameraCurrentOffsetDist = m_CameraOffsetDist;
+			}
+		}
+	//}
 }
 
 void MarioCharacter::DecreaseSpeed(float elapsedTime)
