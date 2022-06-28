@@ -89,6 +89,7 @@ private:
 
 	// Lit Fuse Logic
 	const float m_LitFuseDistance{ 15 };
+	const float m_LitFuseMaxHeightDifference{ 10 };
 	const float m_LitFuseTime{ 3.f };
 	float m_LitFuseCounter{};
 

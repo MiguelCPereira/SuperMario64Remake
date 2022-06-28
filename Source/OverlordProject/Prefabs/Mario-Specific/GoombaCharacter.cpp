@@ -77,9 +77,11 @@ void GoombaCharacter::Update(const SceneContext& sceneContext)
 		if (m_SoundFadingOut)
 			UpdateSoundFadeOut(elapsedTime);
 
-		XMVECTOR marioDistanceVec = XMVector3Length(XMLoadFloat3(&m_pMario->GetTransform()->GetWorldPosition()) - XMLoadFloat3(&GetTransform()->GetWorldPosition()));
-		float marioDistance = 0.0f;
-		XMStoreFloat(&marioDistance, marioDistanceVec);
+		const XMVECTOR marioDistanceVec = XMLoadFloat3(&m_pMario->GetTransform()->GetWorldPosition()) - XMLoadFloat3(&GetTransform()->GetWorldPosition());
+		XMFLOAT3 marioDistance{};
+		XMStoreFloat3(&marioDistance, marioDistanceVec);
+		float marioDistanceLength = 0.0f;
+		XMStoreFloat(&marioDistanceLength, XMVector3Length(marioDistanceVec));
 
 		float wanderAngle;
 		float randomPerc;
@@ -89,8 +91,9 @@ void GoombaCharacter::Update(const SceneContext& sceneContext)
 		switch (m_State)
 		{
 		case Wandering:
-			//If Mario's close by, switch to chasing
-			if (marioDistance <= m_ChaseDistance)
+			//If Mario's close by (and not to far above/bellow), switch to chasing
+			if (marioDistanceLength <= m_ChaseDistance &&
+				marioDistance.y < m_ChaseMaxHeightDifference && marioDistance.y > -m_ChaseMaxHeightDifference)
 			{
 				SoundManager::Get()->GetSystem()->playSound(m_pAlertSound, nullptr, false, &m_pSFXChannel);
 				m_TargetPosition = m_pMario->GetTransform()->GetWorldPosition();
@@ -139,7 +142,7 @@ void GoombaCharacter::Update(const SceneContext& sceneContext)
 
 		case Chasing:
 			//If Mario ran away, switch to wandering
-			if (marioDistance > m_ChaseDistance)
+			if (marioDistanceLength > m_ChaseDistance)
 			{
 				m_pChaseChannel->setPaused(true);
 				m_WanderChangeCounter = m_WanderChangeDirInterval;
@@ -196,7 +199,7 @@ void GoombaCharacter::Update(const SceneContext& sceneContext)
 		if (m_pMario->GetState() != MidDamaged && m_pMario->GetState() != Dead)
 		{
 			// If Mario is close enough to suffer/do any effects (punch dist > damage dist)
-			if (marioDistance < m_PunchDistance)
+			if (marioDistanceLength < m_PunchDistance)
 			{
 				// If Mario is punching and facing the right direction, throw the goomba
 				if (m_pMario->GetState() == Punching)
@@ -215,7 +218,7 @@ void GoombaCharacter::Update(const SceneContext& sceneContext)
 				}
 
 				// If Mario is close enough to take either get damaged or stomp
-				if (marioDistance < m_DamageDistance)
+				if (marioDistanceLength < m_DamageDistance)
 				{
 					// If Mario is jumping and above the goomba's head, stomp
 					if ((m_pMario->GetState() == MidAir &&

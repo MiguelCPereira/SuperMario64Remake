@@ -102,6 +102,7 @@ private:
 
 	// Chase/Alert Logic
 	const float m_ChaseDistance{ 15 };
+	const float m_ChaseMaxHeightDifference{ 10 };
 	const float m_TimeToLeaveFloor{ 0.2f };
 	float m_JumpCounter{};
 

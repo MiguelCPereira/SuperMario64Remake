@@ -103,10 +103,9 @@ private:
 	// Camera Logic
 	CameraComponent* m_pCameraComponent{};
 	const float m_PitchMax{ 10.f }, m_PitchMin{ -10.f };
-	XMFLOAT3 m_LastWorldCameraPos{};
-	bool m_RaycastActive{ false };
 	const float m_CameraOffsetDist{ 10.f};
 	float m_CameraCurrentOffsetDist{ 10.f };
+	XMFLOAT3 m_CameraOffsetLocalPos{};
 	const float m_CameraVerticalInclination{ 0.1f }; // Between 0.0 and 1.0
 
 
@@ -200,6 +199,8 @@ private:
 
 
 	void HandleCamera(const SceneContext& sceneContext);
+	void AvoidCameraClipping();
+	void UpdateCameraWCurrentOffset() const;
 	void DecreaseSpeed(float elapsedTime);
 	void DecreaseLungedVelocity(float elapsedTime);
 	void MoveSideways(const SceneContext& sceneContext, bool crouched);

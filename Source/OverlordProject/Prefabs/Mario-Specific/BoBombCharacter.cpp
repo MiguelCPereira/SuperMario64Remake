@@ -101,9 +101,11 @@ void BoBombCharacter::Update(const SceneContext& sceneContext)
 		if (m_SoundFadingOut)
 			UpdateSoundFadeOut(elapsedTime);
 
-		XMVECTOR marioDistanceVec = XMVector3Length(XMLoadFloat3(&m_pMario->GetTransform()->GetWorldPosition()) - XMLoadFloat3(&GetTransform()->GetWorldPosition()));
-		float marioDistance = 0.0f;
-		XMStoreFloat(&marioDistance, marioDistanceVec);
+		const XMVECTOR marioDistanceVec = XMLoadFloat3(&m_pMario->GetTransform()->GetWorldPosition()) - XMLoadFloat3(&GetTransform()->GetWorldPosition());
+		XMFLOAT3 marioDistance{};
+		XMStoreFloat3(&marioDistance, marioDistanceVec);
+		float marioDistanceLength = 0.0f;
+		XMStoreFloat(&marioDistanceLength, XMVector3Length(marioDistanceVec));
 
 		float wanderAngle;
 		float randomPerc;
@@ -112,7 +114,7 @@ void BoBombCharacter::Update(const SceneContext& sceneContext)
 		{
 		case Wandering:
 			// If picked up
-			if (marioDistance <= m_PickedUpDistance && m_pMario->GetState() == Punching)
+			if (marioDistanceLength <= m_PickedUpDistance && m_pMario->GetState() == Punching)
 			{
 				// Play the SFX
 				SoundManager::Get()->GetSystem()->playSound(m_pFumeSound, nullptr, false, &m_pFumeChannel);
@@ -129,8 +131,9 @@ void BoBombCharacter::Update(const SceneContext& sceneContext)
 				break;
 			}
 
-			//If Mario's close by, switch to chasing
-			if (marioDistance <= m_LitFuseDistance)
+			//If Mario's close by (and not to far above/bellow), switch to chasing
+			if (marioDistanceLength <= m_LitFuseDistance &&
+				marioDistance.y < m_LitFuseMaxHeightDifference && marioDistance.y > -m_LitFuseMaxHeightDifference)
 			{
 				// Play the SFX
 				// Only initializing the sounds here makes it so that each bobomb will play them at a unique offset
@@ -181,7 +184,7 @@ void BoBombCharacter::Update(const SceneContext& sceneContext)
 			}
 
 			// If picked up
-			if (marioDistance <= m_PickedUpDistance && m_pMario->GetState() == Punching)
+			if (marioDistanceLength <= m_PickedUpDistance && m_pMario->GetState() == Punching)
 			{
 				// Make the controller component ignore collisions with Mario
 				m_pControllerComponent->SetCollisionIgnoreGroup(CollisionGroup::Group1);
