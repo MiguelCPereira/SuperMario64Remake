@@ -18,6 +18,11 @@ struct CannonballSpawnInfo
 	bool resetAfterAllTargets;
 };
 
+struct ChainchompSpawnInfo
+{
+	XMFLOAT3 spawnPosition = XMFLOAT3(0, 0, 0);
+};
+
 class MainScene : public GameScene
 {
 public:

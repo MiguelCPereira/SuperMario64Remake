@@ -93,6 +93,7 @@
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Prefabs\Mario-Specific\ChainchompCharacter.cpp" />
     <ClCompile Include="Materials\PureDiffuseMaterial.cpp" />
     <ClCompile Include="Scenes\Mario64\DeathScreen.cpp" />
     <ClCompile Include="Materials\Post\PostColor.cpp" />
@@ -161,6 +162,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Prefabs\Mario-Specific\ChainchompCharacter.h" />
     <ClInclude Include="Materials\PureDiffuseMaterial.h" />
     <ClInclude Include="Scenes\Mario64\DeathScreen.h" />
     <ClInclude Include="Materials\Post\PostColor.h" />

@@ -50,6 +50,7 @@
     <ClCompile Include="Scenes\Mario64\DeathScreen.cpp" />
     <ClCompile Include="Materials\PureDiffuseMaterial.cpp" />
     <ClCompile Include="Prefabs\Mario-Specific\Tube.cpp" />
+    <ClCompile Include="Prefabs\Mario-Specific\ChainchompCharacter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainGame.h" />
@@ -100,6 +101,7 @@
     <ClInclude Include="Scenes\Mario64\DeathScreen.h" />
     <ClInclude Include="Materials\PureDiffuseMaterial.h" />
     <ClInclude Include="Prefabs\Mario-Specific\Tube.h" />
+    <ClInclude Include="Prefabs\Mario-Specific\ChainchompCharacter.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\Textures\TestSprite.jpg" />
