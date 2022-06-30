@@ -6,14 +6,14 @@
 #include "Scenes/Mario64/MainScene.h"
 
 
-ChainchompCharacter::ChainchompCharacter(const ChainchompDesc& characterDesc, MarioCharacter* pMario, ChainchompSpawnInfo* pSpawnInfo) :
+ChainchompCharacter::ChainchompCharacter(const ChainchompDesc& characterDesc, MarioCharacter* pMario, const XMFLOAT3& spawnPos) :
 	m_ChainchompDesc{ characterDesc },
 	m_MoveAcceleration(characterDesc.maxMoveSpeed / characterDesc.moveAccelerationTime),
 	m_RotationAcceleration(characterDesc.maxRotationSpeed / characterDesc.rotationAccelerationTime),
 	m_FallAcceleration(characterDesc.maxFallSpeed / characterDesc.fallAccelerationTime),
 	m_TargetPosition{},
 	m_pMario{ pMario },
-	m_pSpawnInfo{ pSpawnInfo }
+	m_SpawnPosition{ spawnPos }
 {
 }
 
@@ -37,8 +37,7 @@ void ChainchompCharacter::Initialize(const SceneContext&)
 
 	//Sound
 	auto* pSoundManagerSystem = SoundManager::Get()->GetSystem();
-	pSoundManagerSystem->createStream("Resources/Sounds/chainchomp-chain-loop.WAV", FMOD_LOOP_NORMAL, nullptr, &m_pChainSound);
-	pSoundManagerSystem->createStream("Resources/Sounds/chainchomp-bite.WAV", FMOD_DEFAULT, nullptr, &m_pBittingSound);
+	pSoundManagerSystem->createStream("Resources/Sounds/chainchomp-chain.WAV", FMOD_DEFAULT, nullptr, &m_pChainSound);
 	pSoundManagerSystem->createStream("Resources/Sounds/chainchomp-lunge.WAV", FMOD_DEFAULT, nullptr, &m_pLungingSound);
 }
 
@@ -48,28 +47,72 @@ void ChainchompCharacter::Update(const SceneContext& sceneContext)
 	{
 		const auto elapsedTime = sceneContext.pGameTime->GetElapsed();
 
-		Update3DSound();
-
-		// The sound must fade out after it is updated (the Update3DSounds)
-		if (m_SoundFadingOut)
-			UpdateSoundFadeOut(elapsedTime);
-
 		const XMVECTOR marioDistanceVec = XMLoadFloat3(&m_pMario->GetTransform()->GetWorldPosition()) - XMLoadFloat3(&GetTransform()->GetWorldPosition());
 		XMFLOAT3 marioDistance{};
 		XMStoreFloat3(&marioDistance, marioDistanceVec);
 		float marioDistanceLength = 0.0f;
 		XMStoreFloat(&marioDistanceLength, XMVector3Length(marioDistanceVec));
 
+		Update3DSound(marioDistanceLength);
+
+		// The sound must fade out after it is updated (the Update3DSounds)
+		if (m_SoundFadingOut)
+			UpdateSoundFadeOut(elapsedTime);
+
 		switch (m_State)
 		{
 		case Idle:
+			// Start rotation (lining up an attack) as soon as Mario gets close enough
+			if (marioDistanceLength <= m_ActivationDistance)
+			{
+				//Play the SFX
+				SoundManager::Get()->GetSystem()->playSound(m_pChainSound, nullptr, false, &m_pChainChannel);
+
+				m_State = Rotating;
+				break;
+			}
 			break;
+
+
 		case Rotating:
+			// Update the SFX
+			m_ChainPauseCounter += elapsedTime;
+			if(m_ChainPauseCounter >= m_ChainPauseBetweenLoopRot)
+			{
+				SoundManager::Get()->GetSystem()->playSound(m_pChainSound, nullptr, false, &m_pChainChannel);
+				m_ChainPauseCounter = 0.f;
+			}
+
+			// Rotate until facing Mario or time running out
+			m_RotationTimeCounter += elapsedTime;
+			if(m_RotationTimeCounter >= m_MaxRotationTime)
+			{
+				SoundManager::Get()->GetSystem()->playSound(m_pLungingSound, nullptr, false, &m_pLungingChannel);
+				m_RotationTimeCounter = 0.f;
+				// Lunge
+				m_State = Lunging;
+			}
 			break;
+
+
 		case Lunging:
 			break;
+
+
 		case Recoiling:
+			// Update the SFX
+			m_ChainPauseCounter += elapsedTime;
+			if (m_ChainPauseCounter >= m_ChainPauseBetweenLoopRecoil)
+			{
+				SoundManager::Get()->GetSystem()->playSound(m_pChainSound, nullptr, false, &m_pChainChannel);
+				m_ChainPauseCounter = 0.f;
+			}
+
+			// Hop back to center (little jumps every time the ground is touched)
+
 			break;
+
+
 		default:
 			break;
 		}
@@ -98,49 +141,57 @@ bool ChainchompCharacter::CheckIfGrounded()
 	return false;
 }
 
-void ChainchompCharacter::Update3DSound()
+void ChainchompCharacter::Update3DSound(float marioDistanceLength)
 {
-	float marioDistance;
-	XMStoreFloat(&marioDistance, XMVector3Length(XMLoadFloat3(&m_pMario->GetTransform()->GetWorldPosition()) - XMLoadFloat3(&GetTransform()->GetWorldPosition())));
-
-	auto intendedVolume = 1.f - marioDistance / m_SoundStartDistance;
+	auto intendedVolume = 1.f - marioDistanceLength / m_SoundStartDistance;
 
 	if (intendedVolume <= 0.0f)
 	{
 		intendedVolume = 0.0f;
 	}
 
-	m_pSFXChannel->setVolume(intendedVolume * m_VolumeMultiplier);
-	m_CurrentSFXVol = intendedVolume * m_VolumeMultiplier;
+	m_CurrentVolume = intendedVolume * m_VolumeMultiplier;
 
-	//Start playing SFX
-	if (m_SFXPlaying == false && intendedVolume > 0.0f)
-	{
-		SoundManager::Get()->GetSystem()->playSound(m_pChainSound, nullptr, false, &m_pSFXChannel);
-		m_SFXPlaying = true;
-	}
+	m_pChainChannel->setVolume(m_CurrentVolume);
+	m_pLungingChannel->setVolume(m_CurrentVolume);
 }
 
 void ChainchompCharacter::Reset()
 {
 	m_MoveSpeed = 0.0f;
 	m_TotalVelocity = XMFLOAT3(0, 0, 0);
-	m_pControllerComponent->Translate(m_pSpawnInfo->spawnPosition);
+	m_pControllerComponent->Translate(m_SpawnPosition);
 	m_CurrentTargetPos = 0;
+	m_RotationTimeCounter = 0.f;
+	m_ChainPauseCounter = 0.f;
 
-	m_pSFXChannel->setVolume(0.0f);
+	m_pChainChannel->setPaused(true);
+	m_pLungingChannel->setPaused(true);
 	m_SoundFadeOutCounter = 0.0f;
 	m_SoundFadingOut = false;
 }
 
 void ChainchompCharacter::TogglePause(bool paused)
 {
-	m_Paused = paused;
-
 	if (paused)
-		m_pSFXChannel->setPaused(true);
+	{
+		if (m_State != Paused)
+		{
+			m_StateBeforePause = m_State;
+			m_State = Paused;
+
+			m_pChainChannel->getPaused(&m_ChainPlayingBeforePause);
+			m_pChainChannel->setPaused(true);
+			m_pLungingChannel->getPaused(&m_LungingPlayingBeforePause);
+			m_pLungingChannel->setPaused(true);
+		}
+	}
 	else
-		m_pSFXChannel->setPaused(false);
+	{
+		m_State = m_StateBeforePause;
+		m_pChainChannel->setPaused(m_ChainPlayingBeforePause);
+		m_pLungingChannel->setPaused(m_LungingPlayingBeforePause);
+	}
 }
 
 void ChainchompCharacter::ToggleSoundFadeOut(float fadeTime)
@@ -160,5 +211,6 @@ void ChainchompCharacter::UpdateSoundFadeOut(float elapsedTime)
 		m_SoundFadeOutCounter = 0.0f;
 	}
 
-	m_pSFXChannel->setVolume(m_CurrentSFXVol * currentVolPercent);
+	m_pChainChannel->setVolume(m_CurrentVolume * currentVolPercent);
+	m_pLungingChannel->setVolume(m_CurrentVolume * currentVolPercent);
 }

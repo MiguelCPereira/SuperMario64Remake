@@ -14,6 +14,7 @@ public:
 
 	void Reset();
 	void ToggleSoundFadeOut(float fadeTime);
+	void TogglePause(bool paused);
 
 protected:
 	void Initialize(const SceneContext&) override;
@@ -48,6 +49,7 @@ private:
 	const float m_IdleMaxVolume{ 0.1f };
 	const float m_PickedUpMaxVolume{ 3.f };
 	bool m_IdlePlaying{};
+	bool m_PickedUpPlaying{};
 	float m_CurrentIdleVol{ 1.f };
 	float m_CurrentPickedUpVol{ 1.f };
 
@@ -57,8 +59,8 @@ private:
 	float m_SoundTotalFadeTime{};
 	float m_SoundFadeOutCounter{};
 	void UpdateSoundFadeOut(float elapsedTime);
-
-
 	void Update3DSounds();
+
+	bool m_Paused{};
 };
 

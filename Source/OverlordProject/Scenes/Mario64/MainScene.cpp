@@ -7,6 +7,7 @@
 #include "Materials/Shadow/DiffuseMaterial_Shadow.h"
 #include "Prefabs/Mario-Specific/BoBombCharacter.h"
 #include "Prefabs/Mario-Specific/CannonballCharacter.h"
+#include "Prefabs/Mario-Specific/ChainchompCharacter.h"
 #include "Prefabs/Mario-Specific/Star.h"
 #include "Prefabs/Mario-Specific/Tube.h"
 
@@ -166,9 +167,14 @@ void MainScene::Initialize()
 	SpawnCannonballs(pDefaultMaterial);
 
 
+	// Spawn chainchomp
+	const auto chainchompSpawnPos = XMFLOAT3(-30.2f, 67.f, -58.32f);
+	ChainchompDesc chainchompDesc{ pDefaultMaterial };
+	m_pChainchomp = AddChild(new ChainchompCharacter(chainchompDesc, m_pCharacter, chainchompSpawnPos));
+
 
 	// Spawn final star
-	auto starSpawnPos = XMFLOAT3(-30.2f, 67.f, -58.32f);
+	const auto starSpawnPos = XMFLOAT3(-30.2f, 67.f, -58.32f);
 	m_pStar = AddChild(new Star(starSpawnPos, m_pCharacter));
 
 
@@ -324,6 +330,7 @@ void MainScene::Reset()
 		cannonball.first->Reset();
 	}
 
+	m_pChainchomp->Reset();
 	m_pStar->Reset();
 	m_pTube->Reset();
 
@@ -476,6 +483,9 @@ void MainScene::TogglePause(bool paused)
 	{
 		cannonball.first->TogglePause(paused);
 	}
+
+	m_pStar->TogglePause(paused);
+	m_pChainchomp->TogglePause(paused);
 }
 
 void MainScene::ToggleSoundFadeOut(float fadeTime)
@@ -502,6 +512,7 @@ void MainScene::ToggleSoundFadeOut(float fadeTime)
 		cannonball.first->ToggleSoundFadeOut(fadeTime);
 	}
 
+	m_pChainchomp->ToggleSoundFadeOut(fadeTime);
 	m_pStar->ToggleSoundFadeOut(fadeTime);
 }
 

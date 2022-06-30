@@ -1,4 +1,5 @@
 #pragma once
+class ChainchompCharacter;
 class Tube;
 class Star;
 class CannonballCharacter;
@@ -16,11 +17,6 @@ struct CannonballSpawnInfo
 {
 	std::vector<XMFLOAT3> targetPositions;
 	bool resetAfterAllTargets;
-};
-
-struct ChainchompSpawnInfo
-{
-	XMFLOAT3 spawnPosition = XMFLOAT3(0, 0, 0);
 };
 
 class MainScene : public GameScene
@@ -62,6 +58,7 @@ private:
 	MarioCharacter* m_pCharacter{};
 	XMFLOAT3 m_MarioSpawnPosition{ 112.936f, 1.9f, 110.05f };
 	Star* m_pStar{};
+	ChainchompCharacter* m_pChainchomp{};
 	std::vector <std::pair<GoombaCharacter*, SpawnInfo*>> m_pGoombas{};
 	std::vector<std::pair<BoBombCharacter*, SpawnInfo*>> m_pBobOmbs{};
 	std::vector<std::pair<CannonballCharacter*, CannonballSpawnInfo*>> m_pCannonballs{};

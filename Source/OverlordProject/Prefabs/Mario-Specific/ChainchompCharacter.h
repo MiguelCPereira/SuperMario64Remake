@@ -29,7 +29,7 @@ struct ChainchompDesc
 class ChainchompCharacter : public GameObject
 {
 public:
-	ChainchompCharacter(const ChainchompDesc& characterDesc, MarioCharacter* pMario, ChainchompSpawnInfo* pSpawnInfo);
+	ChainchompCharacter(const ChainchompDesc& characterDesc, MarioCharacter* pMario, const XMFLOAT3& spawnPos);
 	~ChainchompCharacter() = default;
 
 	ChainchompCharacter(const ChainchompCharacter& other) = delete;
@@ -64,24 +64,31 @@ private:
 	};
 
 	ChainchompState m_State{ Idle };
+	ChainchompState m_StateBeforePause{ Idle };
 
 	// Sound
-	FMOD::Channel* m_pSFXChannel{};
+	FMOD::Channel* m_pChainChannel{};
+	FMOD::Channel* m_pLungingChannel{};
 	FMOD::Sound* m_pChainSound{};
-	FMOD::Sound* m_pBittingSound{};
 	FMOD::Sound* m_pLungingSound{};
 	const float m_SoundStartDistance{ 60.f };
+	const float m_ChainPauseBetweenLoopRot{ 2.f };
+	const float m_ChainPauseBetweenLoopRecoil{ 1.f };
+	float m_ChainPauseCounter{ 0.f };
 	const float m_VolumeMultiplier{ 8.f };
-	float m_CurrentSFXVol{ 1.f };
-	bool m_SFXPlaying{};
+	float m_CurrentVolume{ 1.f };
+	bool m_ChainPlayingBeforePause{};
+	bool m_LungingPlayingBeforePause{};
 
 
 	// General Logic
 	MarioCharacter* m_pMario{};
 	XMFLOAT3 m_TargetPosition{};
 	int m_CurrentTargetPos{};
+	const float m_ActivationDistance{ 15 };
 	const float m_DamageDistance{ 5.472f };
-	const float m_SeekErrorMargin{ 0.8f };
+	const float m_MaxRotationTime{ 5 };
+	float m_RotationTimeCounter{};
 
 
 	// Sound Fade Out Logic
@@ -91,10 +98,10 @@ private:
 	void UpdateSoundFadeOut(float elapsedTime);
 
 
-	ChainchompSpawnInfo* m_pSpawnInfo;
+	const XMFLOAT3 m_SpawnPosition;
 
 
 	bool CheckIfGrounded();
-	void Update3DSound();
+	void Update3DSound(float marioDistanceLength);
 };
 
