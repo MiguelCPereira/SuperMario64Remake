@@ -135,8 +135,8 @@ private:
 	bool m_DamagedForTooLong{};
 	const float m_RecoveryTime{ 1.f };
 	float m_RecoveryCounter{};
-	const float m_MinFreezeDamageTime{ 0.2f };
-	const float m_MaxFreezeDamageTime{ 0.6f };
+	const float m_MinFreezeDamageTime{ 0.6f };
+	const float m_MaxFreezeDamageTime{ 1.f };
 	bool m_LungeForceXPositive{};
 	bool m_LungeForceZPositive{};
 	void UpdateRecovery(float elapsedTime);

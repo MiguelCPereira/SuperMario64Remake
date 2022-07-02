@@ -277,10 +277,22 @@ void GoombaCharacter::RotateMesh()
 	XMFLOAT3 modelDir;
 	XMStoreFloat3(&modelDir, XMVector3Normalize(XMVector3Transform(temp, rotMatrix)));
 
-	// Calculate the angle between the current forward and the target
+	// Calculate the current forward and the direction to the target as 2D vecs
 	const auto currentDir = XMFLOAT2(modelDir.x, modelDir.z);
 	const auto targetDir = XMFLOAT2(m_TargetDirection.x, m_TargetDirection.z);
 
+	// Make sure the rotation stops once they're facing the target (withing a small offset)
+	if ((targetDir.x - modelDir.x <= 0.f && targetDir.x - modelDir.x > -0.1f) ||
+		(targetDir.x - modelDir.x >= 0.f && targetDir.x - modelDir.x < 0.1f))
+	{
+		if ((targetDir.y - currentDir.y <= 0.f && targetDir.y - currentDir.y > -0.1f) ||
+			(targetDir.y - currentDir.y >= 0.f && targetDir.y - currentDir.y < 0.1f))
+		{
+			return;
+		}
+	}
+
+	// Calculate the rotation angle for this frame
 	const auto dot = currentDir.x * currentDir.y + targetDir.x * targetDir.y;
 	const auto det = currentDir.x * targetDir.y - targetDir.x * currentDir.y;
 	auto angle = -atan2(det, dot);

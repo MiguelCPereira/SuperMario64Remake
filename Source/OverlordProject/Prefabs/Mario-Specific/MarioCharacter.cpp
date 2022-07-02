@@ -1110,6 +1110,7 @@ void MarioCharacter::GetDamaged(int dmgAmount, XMFLOAT3 dmgOrigin)
 		SoundManager::Get()->GetSystem()->playSound(m_pDamagedSound, nullptr, false, &m_pSFXChannel);
 		m_pAnimator->SetAnimation(L"Hit");
 		m_pAnimator->Play(true);
+		m_pWalkDustEmitter->ToggleSpawning(false);
 
 		m_CurrentHealth -= dmgAmount;
 

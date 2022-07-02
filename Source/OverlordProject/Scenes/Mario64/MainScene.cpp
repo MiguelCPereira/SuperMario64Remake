@@ -168,7 +168,7 @@ void MainScene::Initialize()
 
 
 	// Spawn chainchomp
-	const auto chainchompSpawnPos = XMFLOAT3(3.3217f, 20.3f, 36.814f);
+	const auto chainchompSpawnPos = XMFLOAT3(3.3217f, 21.f, 36.814f);
 	ChainchompDesc chainchompDesc{ pDefaultMaterial };
 	m_pChainchomp = AddChild(new ChainchompCharacter(chainchompDesc, m_pCharacter, chainchompSpawnPos));
 

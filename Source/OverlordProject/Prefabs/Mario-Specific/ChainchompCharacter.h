@@ -15,7 +15,7 @@ struct ChainchompDesc
 		controller.material = pMaterial;
 	}
 
-	float hopSpeed{ 8.f };
+	float hopSpeed{ 11.f };
 
 	float maxLungeSpeed{ 40.f };
 	float maxRecoilSpeed{ 10.f };
@@ -71,10 +71,7 @@ private:
 	FMOD::Channel* m_pLungingChannel{};
 	FMOD::Sound* m_pChainSound{};
 	FMOD::Sound* m_pLungingSound{};
-	const float m_SoundStartDistance{ 60.f };
-	const float m_PauseBetweenHopsRot{ 0.6f };
-	const float m_PauseBetweenHopsRecoil{ 0.9f };
-	float m_PauseBetweenHopsCounter{ 0.f };
+	const float m_SoundStartDistance{ 80.f };
 	const float m_VolumeMultiplier{ 8.f };
 	float m_CurrentVolume{ 1.f };
 	bool m_ChainPlayingBeforePause{};
@@ -83,17 +80,32 @@ private:
 
 	// General Logic
 	MarioCharacter* m_pMario{};
-	XMFLOAT3 m_TargetDirection{};
-	float m_TargetDistance{};
-	float m_DistanceLunged{};
-	const float m_RecoilMinCenterOffset{ 1.f };
-	const float m_LungeTargetErrorMargin{ 0.5f };
-	const float m_ActivationDistance{ 25 };
 	const float m_DamageDistance{ 5.472f };
-	const float m_MaxRotationTime{ 5 };
+	const float m_ActivationDistance{ 25 };
+	float m_PauseBetweenHopsCounter{ 0.f };
+	const float m_PauseBetweenHopsRegular{ 0.8f };
+
+	// Idle Logic
+	XMFLOAT3 m_IdleRandomTargetPos{};
+	const float m_IdleRandomPosMaxDist{ 6.f };
+	const float m_IdleMinTargetOffset{ 1.f };
+	bool m_IdleSeekingRandomTarget{ false };
+
+	// Rotation Logic
+	const float m_MaxRotationTime{ 3 };
 	float m_RotationTimeCounter{};
 	float m_Rotated{ 0.f };
 	const float m_TurningSpeed{ 1.2f };
+	const float m_PauseBetweenHopsRot{ 0.6f };
+
+	// Lunging Logic
+	XMFLOAT3 m_TargetDirection{};
+	float m_TargetDistance{};
+	float m_DistanceLunged{};
+	const float m_LungeTargetErrorMargin{ 0.5f };
+
+	// Recoiling Logic
+	const float m_RecoilMinCenterOffset{ 1.f };
 
 
 	// Sound Fade Out Logic
@@ -111,5 +123,6 @@ private:
 	void ApplyGravity(float elapsedTime);
 	void RotateToFaceTarget(const XMFLOAT3& targetPos);
 	void Update3DSound(float marioDistanceLength);
+	void HopToTarget(const XMFLOAT2& toTargetDirection, float elapsedTime);
 };
 

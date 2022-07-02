@@ -98,7 +98,8 @@ void MainGame::OnGamePreparing(GameContext& gameContext)
 	//gameContext.windowWidth=... (default is 1280)
 	//gameContext.windowHeight=... (default is 720)
 
-	gameContext.windowTitle = L"GP2 - Exam Project (2022) | (2DAE06) Pereira Miguel";
+	//gameContext.windowTitle = L"GP2 - Exam Project (2022) | (2DAE06) Pereira Miguel";
+	gameContext.windowTitle = L"Super Mario 64 Remake | Miguel Pereira (2022)";
 }
 
 void MainGame::Initialize()

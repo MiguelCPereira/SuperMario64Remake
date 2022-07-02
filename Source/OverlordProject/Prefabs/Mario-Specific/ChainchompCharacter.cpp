@@ -50,38 +50,68 @@ void ChainchompCharacter::Update(const SceneContext& sceneContext)
 		float marioDistanceLength = 0.0f;
 		XMStoreFloat(&marioDistanceLength, XMVector3Length(marioDistanceVec));
 
-		Update3DSound(marioDistanceLength);
+		//Update3DSound(marioDistanceLength);
 
 		// The sound must fade out after it is updated (the Update3DSounds)
-		if (m_SoundFadingOut)
-			UpdateSoundFadeOut(elapsedTime);
+		//if (m_SoundFadingOut)
+		//	UpdateSoundFadeOut(elapsedTime);
 
 
 
 		float toCenterLength{};
 		XMFLOAT2 toCenterDirection{};
+		float toTargetLength{};
+		XMFLOAT2 toTargetDirection{};
 		switch (m_State)
 		{
 		case Idle:
 			// Start rotation (lining up an attack) as soon as Mario gets close enough
 			if (marioDistanceLength <= m_ActivationDistance)
 			{
-				// Do the first warning hop
-				//// Set the TotalVelocity's Y
-				m_TotalVelocity.y = m_ChainchompDesc.hopSpeed;
-				//// Play the SFX
-				m_pChainChannel->setPosition(0, FMOD_TIMEUNIT_MS);
-				SoundManager::Get()->GetSystem()->playSound(m_pChainSound, nullptr, false, &m_pChainChannel);
-				m_PauseBetweenHopsCounter = 0.f;
-
+				m_TotalVelocity = { 0,0,0 };
 				m_State = Rotating;
 				break;
 			}
 
 			if (CheckIfGrounded() == false)
 				ApplyGravity(elapsedTime);
-			else
+			else if (m_TotalVelocity.y < 0)
 				m_TotalVelocity.y = 0;
+
+			// Seek random targets nearby spawn pos
+
+			// Set a target if it has not been done before yet (aka, it's the 1st frame or the last target has been reached)
+			// And chainchomp is on the floor (as to not change target midair)
+			if(m_IdleSeekingRandomTarget == false && CheckIfGrounded())
+			{
+				m_IdleRandomTargetPos = m_SpawnPosition;
+				m_IdleRandomTargetPos.x += m_IdleRandomPosMaxDist * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX))
+					* 2.f - m_IdleRandomPosMaxDist;
+				m_IdleRandomTargetPos.z += m_IdleRandomPosMaxDist * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX))
+					* 2.f - m_IdleRandomPosMaxDist;
+
+				m_IdleSeekingRandomTarget = true;
+			}
+
+			// If close enough to said target, stop seeking
+			const XMFLOAT2 toTargetHorizDist{ m_IdleRandomTargetPos.x - GetTransform()->GetWorldPosition().x,
+				m_IdleRandomTargetPos.z - GetTransform()->GetWorldPosition().z };
+			XMStoreFloat(&toTargetLength, XMVector2Length(XMLoadFloat2(&toTargetHorizDist)));
+			XMStoreFloat2(&toTargetDirection, XMVector2Normalize(XMLoadFloat2(&toTargetHorizDist)));
+			if (toTargetLength < m_IdleMinTargetOffset)
+			{
+				m_TotalVelocity.x = 0.0f;
+				m_TotalVelocity.z = 0.0f;
+				m_IdleSeekingRandomTarget = false;
+			}
+			else // If not, hop to it
+			{
+				HopToTarget(toTargetDirection, elapsedTime);
+			}
+
+			// Rotate as to face target when not mid-hop
+			if (CheckIfGrounded())
+				RotateToFaceTarget(m_IdleRandomTargetPos);
 
 			break;
 
@@ -118,7 +148,7 @@ void ChainchompCharacter::Update(const SceneContext& sceneContext)
 
 			if (CheckIfGrounded() == false)
 				ApplyGravity(elapsedTime);
-			else
+			else if (m_TotalVelocity.y < 0)
 				m_TotalVelocity.y = 0;
 
 			// Hop in place center
@@ -192,38 +222,15 @@ void ChainchompCharacter::Update(const SceneContext& sceneContext)
 
 			if (CheckIfGrounded() == false)
 				ApplyGravity(elapsedTime);
-			else
+			else if (m_TotalVelocity.y < 0)
 				m_TotalVelocity.y = 0;
 
 			// Hop back to center
-			//// If enough time has passed, hop
-			m_PauseBetweenHopsCounter += elapsedTime;
-			if (m_PauseBetweenHopsCounter >= m_PauseBetweenHopsRecoil)
-			{
-				// Set the Y of TotalVelocity and the MoveSpeed (making the speed in all directions spike each jump start)
-				m_TotalVelocity.y = m_ChainchompDesc.hopSpeed * 2.f;
-				m_MoveSpeed = m_ChainchompDesc.hopSpeed;
+			HopToTarget(toCenterDirection, elapsedTime);
 
-				// Play the SFX
-				m_pChainChannel->setPosition(0, FMOD_TIMEUNIT_MS);
-				SoundManager::Get()->GetSystem()->playSound(m_pChainSound, nullptr, false, &m_pChainChannel);
-				m_PauseBetweenHopsCounter = 0.f;
-			}
-
-			//// Calculate the velocity towards the center and use it to set X and Z of TotalVelocity
-			const auto velocityToCenterVec = XMLoadFloat2(&toCenterDirection) * m_MoveSpeed;
-			XMFLOAT2 velocityToCenter{};
-			XMStoreFloat2(&velocityToCenter, velocityToCenterVec);
-			m_TotalVelocity.x = velocityToCenter.x;
-			m_TotalVelocity.z = velocityToCenter.y;
-
-			// Reduce the speed progressively (as to slow down after every jump)
-			m_MoveSpeed -= m_ChainchompDesc.hopSpeed * 1.5f * elapsedTime;
-			if (m_MoveSpeed < 0.0f)
-				m_MoveSpeed = 0.0f;
-
-			// Rotate as to face center
-			RotateToFaceTarget(m_SpawnPosition);
+			// Rotate as to face center when not mid-hop
+			if (CheckIfGrounded())
+				RotateToFaceTarget(m_SpawnPosition);
 
 			break;
 
@@ -239,6 +246,12 @@ void ChainchompCharacter::Update(const SceneContext& sceneContext)
 				m_pMario->GetDamaged(3, GetTransform()->GetWorldPosition());
 		}
 
+		Update3DSound(marioDistanceLength);
+
+		// The sound must fade out after it is updated (the Update3DSounds)
+		if (m_SoundFadingOut)
+			UpdateSoundFadeOut(elapsedTime);
+
 		ApplyMovement(elapsedTime);
 	}
 }
@@ -251,7 +264,7 @@ bool ChainchompCharacter::CheckIfGrounded()
 	origin.y = m_pControllerComponent->GetTransform()->GetPosition().y;
 	origin.z = m_pControllerComponent->GetTransform()->GetPosition().z;
 	const auto direction = PxVec3(0, -1, 0);
-	const PxReal maxDistance = m_ChainchompDesc.controller.height;
+	const PxReal maxDistance = m_ChainchompDesc.controller.height * 0.95f;
 	PxRaycastBuffer hit;
 	PxQueryFilterData filterData{};
 	filterData.data.word0 = UINT(CollisionGroup::Group9);
@@ -364,23 +377,40 @@ void ChainchompCharacter::ApplyMovement(float elapsedTime)
 void ChainchompCharacter::RotateToFaceTarget(const XMFLOAT3& targetPos)
 {
 	// Get the current forward vector
-	const auto modelDirVec = XMVector3Normalize(XMVector3Transform(
-		XMLoadFloat3(&GetTransform()->GetForward()), XMMatrixRotationY(45.f)));
-	XMFLOAT3 modelDir;
-	XMStoreFloat3(&modelDir, modelDirVec);
+	const auto transfModelDirVec = XMVector3Transform(XMLoadFloat3(&GetTransform()->GetForward()), XMMatrixRotationY(45.f));
+	XMFLOAT3 transfModelDir{};
+	XMStoreFloat3(&transfModelDir, transfModelDirVec);
+	const auto modelDir2DNotNorm = XMFLOAT2(transfModelDir.x, transfModelDir.z);
+	const auto modelDirVec = XMVector2Normalize(XMLoadFloat2(&modelDir2DNotNorm));
+	XMFLOAT2 modelDir;
+	XMStoreFloat2(&modelDir, modelDirVec);
 
-	// Calculate the angle between the current forward and the target
-	const auto currentDir = XMFLOAT2(modelDir.x, modelDir.z);
+	// Calculate the current forward and the direction to the target as 2D vecs
 	const XMFLOAT2 targetPos2D{ targetPos.x, targetPos.z };
 	const XMFLOAT2 currentPos2D{ GetTransform()->GetWorldPosition().x, GetTransform()->GetWorldPosition().z };
 	const XMVECTOR targetDirVec = XMVector2Normalize(XMLoadFloat2(&targetPos2D) - XMLoadFloat2(&currentPos2D));
 	XMFLOAT2 targetDir{};
 	XMStoreFloat2(&targetDir, targetDirVec);
 
-	const auto dot = currentDir.x * targetDir.x + currentDir.x * targetDir.y;
-	const auto det = currentDir.x * targetDir.y - currentDir.y * targetDir.x;
+	// Make sure the rotation stops once they're facing the target (withing a small offset)
+	if((targetDir.x - modelDir.x <= 0.f && targetDir.x - modelDir.x > -0.2f) ||
+		(targetDir.x - modelDir.x >= 0.f && targetDir.x - modelDir.x < 0.2f))
+	{
+		if ((targetDir.y - modelDir.y <= 0.f && targetDir.y - modelDir.y > -0.2f) ||
+			(targetDir.y - modelDir.y >= 0.f && targetDir.y - modelDir.y < 0.2f))
+		{
+			return;
+		}
+	}
+
+
+	// Calculate the rotation angle for this frame
+	const auto dot = modelDir.x * targetDir.x + modelDir.x * targetDir.y;
+	const auto det = modelDir.x * targetDir.y - modelDir.y * targetDir.x;
 	auto angle = -atan2(det, dot);
-	angle *= 0.5f;
+	angle *= 2.f;
+
+
 
 	// And rotate the mesh
 	m_Rotated += angle;
@@ -390,5 +420,44 @@ void ChainchompCharacter::RotateToFaceTarget(const XMFLOAT3& targetPos)
 		m_Rotated += 360.0f;
 
 	GetTransform()->Rotate(0.f, m_Rotated, 0);
+}
+
+void ChainchompCharacter::HopToTarget(const XMFLOAT2& toTargetDirection, float elapsedTime)
+{
+	// Stop moving if grounded
+	if (CheckIfGrounded())
+	{
+		m_MoveSpeed = 0.f;
+
+		// If enough time has passed, hop
+		m_PauseBetweenHopsCounter += elapsedTime;
+
+		auto requiredPause = m_PauseBetweenHopsRegular;
+		if (m_State == Rotating) requiredPause = m_PauseBetweenHopsRot;
+
+		if (m_PauseBetweenHopsCounter >= requiredPause)
+		{
+			// Set the Y of TotalVelocity and the MoveSpeed (making the speed in all directions spike each jump start)
+			m_TotalVelocity.y = m_ChainchompDesc.hopSpeed * 1.5f;
+			m_MoveSpeed = m_ChainchompDesc.hopSpeed;
+
+			// Play the SFX
+			m_pChainChannel->setPosition(0, FMOD_TIMEUNIT_MS);
+			SoundManager::Get()->GetSystem()->playSound(m_pChainSound, nullptr, false, &m_pChainChannel);
+			m_PauseBetweenHopsCounter = 0.f;
+		}
+	}
+
+	// Calculate the velocity towards the center and use it to set X and Z of TotalVelocity
+	const auto velocityToCenterVec = XMLoadFloat2(&toTargetDirection) * m_MoveSpeed;
+	XMFLOAT2 velocityToCenter{};
+	XMStoreFloat2(&velocityToCenter, velocityToCenterVec);
+	m_TotalVelocity.x = velocityToCenter.x;
+	m_TotalVelocity.z = velocityToCenter.y;
+
+	// Reduce the speed progressively (as to slow down after every jump)
+	m_MoveSpeed -= m_ChainchompDesc.hopSpeed * 1.5f * elapsedTime;
+	if (m_MoveSpeed < 0.0f)
+		m_MoveSpeed = 0.0f;
 }
 
