@@ -67,20 +67,41 @@ void GameObject::RootPostInitialize(const SceneContext& sceneContext)
 
 void GameObject::RootUpdate(const SceneContext& sceneContext)
 {
-	//User-Object Update
-	Update(sceneContext);
-	
 	//Component Update
 	for(BaseComponent* pComp: m_pComponents)
 	{
 		pComp->Update(sceneContext);
 	}
 
+	//Delete awaiting children
+	for(int i = int(m_pChildren.size()); i > 0; i--)
+	{
+		if(m_pChildren[i - 1]->GetAwaitingDeletion())
+		{
+			//Reset object parent pointer
+			m_pChildren[i - 1]->m_pParentObject = nullptr;
+
+			//Signal object (Parent Detached)
+			m_pChildren[i - 1]->OnParentDetach(m_pChildren[i - 1]);
+
+			//Signal object and children if detached from scenegraph (Scene Detached)
+			if (GameScene* pScene = GetScene())
+				m_pChildren[i - 1]->RootOnSceneDetach(pScene);
+
+			SafeDelete(m_pChildren[i - 1]);
+
+			m_pChildren.erase(m_pChildren.begin() + i - 1);
+		}
+	}
+
 	//Root-Object Update
-	for(GameObject* pChild: m_pChildren)
+	for (GameObject* pChild : m_pChildren)
 	{
 		pChild->RootUpdate(sceneContext);
 	}
+
+	//User-Object Update
+	Update(sceneContext);
 }
 void GameObject::RootDraw(const SceneContext& sceneContext)
 {

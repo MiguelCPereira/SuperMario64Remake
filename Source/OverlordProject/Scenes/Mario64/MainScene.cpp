@@ -61,7 +61,7 @@ void MainScene::Initialize()
 	m_pCharacter->GetTransform()->Translate(m_MarioSpawnPosition);
 	m_pCharacter->m_TotalYaw = 225.f;
 
-	m_SceneContext.pLights->SetDirectionalLight(XMFLOAT3{ 0, 80, 0 }, XMFLOAT3{ -0.15f, -.85f, 0.f });
+	m_SceneContext.pLights->SetDirectionalLight(XMFLOAT3{ 0, 60, 0 }, XMFLOAT3{ 0.1f, -0.9f, 0.f });
 
 
 
@@ -245,6 +245,13 @@ void MainScene::InitializeLevel(const PxMaterial* pDefaultMaterial)
 
 void MainScene::Update()
 {
+	// Make the light follow Mario, so the ShadowMap can be higher quality
+	// ! Ended up not using this since the shadows popping in/out in the distance according to Mario's pos looked bizarre !
+
+	//auto marioPos = m_pCharacter->GetTransform()->GetWorldPosition();
+	//m_SceneContext.pLights->SetDirectionalLight(XMFLOAT3{ marioPos.x, marioPos.y + 40, marioPos.z }, XMFLOAT3{ 0.15f, -.85f, 0.f });
+
+
 	//Soundtrack
 	if (m_MusicStarted == false)
 	{
@@ -389,13 +396,13 @@ void MainScene::SpawnCannonballs(PxMaterial* pDefaultMaterial)
 	// The first looping pair
 	auto* pCannonBallInfo = new CannonballSpawnInfo{};
 	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(35.4104f, 18.f, -51.6746f));
-	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(24.031f, 18.f, -55.4012f));
+	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(23.031f, 18.f, -54.4012f));
 	pCannonBallInfo->resetAfterAllTargets = false;
 	cannonballs.push_back(pCannonBallInfo);
 
 	pCannonBallInfo = new CannonballSpawnInfo{};
-	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(17.5684f, 18.f, -44.4077f));
-	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(28.5352f, 18.f, -39.2283f));
+	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(18.5684f, 18.f, -43.4077f));
+	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(27.5352f, 18.f, -38.2283f));
 	pCannonBallInfo->resetAfterAllTargets = false;
 	cannonballs.push_back(pCannonBallInfo);
 
@@ -413,7 +420,7 @@ void MainScene::SpawnCannonballs(PxMaterial* pDefaultMaterial)
 	pCannonBallInfo = new CannonballSpawnInfo{};
 	std::vector<XMFLOAT3> targetPos04;
 	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(-3.66327f, 72.f, -76.4811f));
-	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(-34.3582f, 60.f, -93.2189f));
+	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(-34.8582f, 60.f, -93.7189f));
 	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(-63.7088f, 53.f, -75.5881f));
 	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(-63.1872f, 51.f, -40.6746f));
 	pCannonBallInfo->targetPositions.push_back(XMFLOAT3(-36.1968f, 49.f, -23.512f));

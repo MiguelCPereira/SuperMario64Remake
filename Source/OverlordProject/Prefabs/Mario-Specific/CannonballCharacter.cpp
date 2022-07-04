@@ -23,29 +23,29 @@ void CannonballCharacter::Initialize(const SceneContext&)
 	m_pControllerComponent = AddComponent(new ControllerComponent(m_CannonballDesc.controller));
 
 	//Character Mesh
-	//const auto pCharacterMaterial = MaterialManager::Get()->CreateMaterial<DiffuseMaterial_Shadow>();
-	auto pBall = AddChild(new SpherePrefab(0.5f, 10, XMFLOAT4{ Colors::Black }));
-	pBall->GetTransform()->Scale(6.3984f, 6.3984f, 6.3984f);
+	const auto pCharacterMaterial = MaterialManager::Get()->CreateMaterial<DiffuseMaterial_Shadow>();
+	pCharacterMaterial->SetDiffuseTexture(L"Textures/Chainchomp_Diffuse.png");
+	auto modelGO = AddChild(new GameObject);
+	const auto model = modelGO->AddComponent(new ModelComponent(L"Meshes/Sphere.ovm"));
+	model->SetMaterial(pCharacterMaterial);
+	model->GetTransform()->Rotate(90, 45, 0);
+	model->GetTransform()->Scale(0.16f, 0.16f, 0.16f);
 
 	//Sound
 	SoundManager::Get()->GetSystem()->createStream("Resources/Sounds/cannonball-moving.wav", FMOD_LOOP_NORMAL, nullptr, &m_pMovingSound);
+
+	Reset();
 }
 
 void CannonballCharacter::Update(const SceneContext& sceneContext)
 {
-	if (m_Paused == false)
+	if (m_Paused == false && m_pMario != nullptr)
 	{
 		const auto elapsedTime = sceneContext.pGameTime->GetElapsed();
 
 		const XMVECTOR marioDistanceVec = XMVector3Length(XMLoadFloat3(&m_pMario->GetTransform()->GetWorldPosition()) - XMLoadFloat3(&GetTransform()->GetWorldPosition()));
 		float marioDistance = 0.0f;
 		XMStoreFloat(&marioDistance, marioDistanceVec);
-
-		Update3DSound();
-
-		// The sound must fade out after it is updated (the Update3DSounds)
-		if (m_SoundFadingOut)
-			UpdateSoundFadeOut(elapsedTime);
 
 		// Make sure
 		if (CheckIfGrounded() == false)
@@ -104,6 +104,13 @@ void CannonballCharacter::Update(const SceneContext& sceneContext)
 			SeekNextTarget(elapsedTime);
 		}
 
+
+		Update3DSound();
+
+		// The sound must fade out after it is updated (the Update3DSounds)
+		if (m_SoundFadingOut)
+			UpdateSoundFadeOut(elapsedTime);
+
 		// Check if Damage
 		if (m_pMario->GetState() != MidDamaged && m_pMario->GetState() != Dead)
 		{
@@ -139,7 +146,7 @@ bool CannonballCharacter::CheckIfGrounded()
 	origin.y = m_pControllerComponent->GetTransform()->GetPosition().y; // - m_CharacterDesc.controller.height;
 	origin.z = m_pControllerComponent->GetTransform()->GetPosition().z; // - m_CharacterDesc.controller.height;
 	const auto direction = PxVec3(0, -1, 0);
-	const PxReal maxDistance = 4.f;//m_CharacterDesc.controller.height;
+	const PxReal maxDistance = 3.2f;//m_CharacterDesc.controller.height;
 	PxRaycastBuffer hit;
 	PxQueryFilterData filterData{};
 	filterData.data.word0 = UINT(CollisionGroup::Group9);

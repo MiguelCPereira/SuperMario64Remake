@@ -52,7 +52,9 @@ protected:
 
 private:
 	GameObject* m_pModelParentGO{};
-	GameObject* m_pModelGO{};
+	GameObject* m_pModelBodyGO{};
+	GameObject* m_pModelFootLeftGO{};
+	GameObject* m_pModelFootRightGO{};
 	ControllerComponent* m_pControllerComponent{};
 
 	GoombaDesc m_GoombaDesc;
@@ -73,13 +75,13 @@ private:
 	GoombaState m_State{ Wandering };
 
 	// Sound Logic
-	FMOD::Channel* m_pChaseChannel{};
-	FMOD::Sound* m_pChaseSound{};
+	FMOD::Sound* m_pStepSound{};
+	FMOD::Channel* m_pStepChannel{};
 	FMOD::Channel* m_pSFXChannel{};
 	FMOD::Sound* m_pJumpedOnSound{};
 	FMOD::Sound* m_pPunchedSound{};
 	FMOD::Sound* m_pAlertSound{};
-	const float m_SoundStartDistance{ 30.f };
+	const float m_SoundStartDistance{ 35.f };
 	float m_CurrentChaseVol{ 1.f };
 	float m_CurrentSFXVol{ 1.f };
 
@@ -116,7 +118,7 @@ private:
 
 	// Pause Logic
 	GoombaState m_StateBeforePause{ Wandering };
-	bool m_ChasePlayingBeforePause{ false };
+	bool m_StepPlayingBeforePause{ false };
 	bool m_SFXPlayingBeforePause{ false };
 
 	// Sound Fade Out Logic
@@ -124,6 +126,15 @@ private:
 	float m_SoundTotalFadeTime{};
 	float m_SoundFadeOutCounter{};
 	void UpdateSoundFadeOut(float elapsedTime);
+
+	// Walking Animation Logic
+	const float m_MaxFootHeight{ 0.03f };
+	const float m_FeetHorizToVertMovRatio{ 2.f };
+	const float m_FullStepTimeWander{ 0.8f };
+	const float m_FullStepTimeChase{ 0.3f };
+	bool m_LeftFootUp{};
+	bool m_FootAscending{true};
+	float m_StepTimer{};
 
 	SpawnInfo* m_pSpawnInfo;
 
@@ -133,5 +144,6 @@ private:
 	bool CheckIfGrounded() const;
 	void Update3DSounds();
 	void ApplyGravity(float elapsedTime);
+	void AnimateFeet(float timeForHalfStep, float elapsedTime);
 };
 

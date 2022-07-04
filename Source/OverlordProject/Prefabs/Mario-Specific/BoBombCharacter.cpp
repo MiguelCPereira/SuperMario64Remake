@@ -34,7 +34,7 @@ void BoBombCharacter::BlowUp()
 
 	//Play the SFX
 	SoundManager::Get()->GetSystem()->playSound(m_pExplodeSound, nullptr, false, &m_pExplodeChannel);
-	m_pChaseChannel->setPaused(true);
+	m_pStepChannel->setPaused(true);
 	m_pFumeChannel->setPaused(true);
 
 	// Spawn explosion
@@ -50,7 +50,8 @@ void BoBombCharacter::BlowUp()
 		RemoveComponent(m_pControllerComponent, true);
 		m_pControllerComponent = nullptr;
 	}
-	GetParent()->RemoveChild(this, true);
+	//GetParent()->RemoveChild(this, true);
+	SetAwaitingDeletion(true);
 }
 
 
@@ -63,15 +64,21 @@ void BoBombCharacter::Initialize(const SceneContext&)
 	const auto pCharacterMaterial = MaterialManager::Get()->CreateMaterial<DiffuseMaterial_Shadow>();
 	pCharacterMaterial->SetDiffuseTexture(L"Textures/BobOmb_Diffuse.png");
 	m_pModelParentGO = AddChild(new GameObject);
-	m_pModelGO = m_pModelParentGO->AddChild(new GameObject);
-	const auto pModel = m_pModelGO->AddComponent(new ModelComponent(L"Meshes/BobOmb/BobOmb.ovm"));
-	pModel->SetMaterial(pCharacterMaterial);
+	m_pModelBodyGO = m_pModelParentGO->AddChild(new GameObject);
+	const auto modelBody = m_pModelBodyGO->AddComponent(new ModelComponent(L"Meshes/BobOmb/BobOmbBody.ovm"));
+	modelBody->SetMaterial(pCharacterMaterial);
+	m_pModelFootLeftGO = m_pModelParentGO->AddChild(new GameObject);
+	const auto modelFootL = m_pModelFootLeftGO->AddComponent(new ModelComponent(L"Meshes/BobOmb/BobOmbFootL.ovm"));
+	modelFootL->SetMaterial(pCharacterMaterial);
+	m_pModelFootRightGO = m_pModelParentGO->AddChild(new GameObject);
+	const auto modelFootR = m_pModelFootRightGO->AddComponent(new ModelComponent(L"Meshes/BobOmb/BobOmbFootR.ovm"));
+	modelFootR->SetMaterial(pCharacterMaterial);
 	m_pModelParentGO->GetTransform()->Scale(0.06f, 0.06f, 0.06f);
-	m_pModelParentGO->GetTransform()->Translate(0, -m_BoBombDesc.controller.height - 0.5f, 0);
+	m_pModelParentGO->GetTransform()->Translate(0, -m_BoBombDesc.controller.height * 2.f - 0.5f, 0);
 
 	//Sound
 	auto* pSoundManagerSystem = SoundManager::Get()->GetSystem();
-	pSoundManagerSystem->createStream("Resources/Sounds/bobomb-run.WAV", FMOD_LOOP_NORMAL, nullptr, &m_pChaseSound);
+	pSoundManagerSystem->createStream("Resources/Sounds/bobomb-run.WAV", FMOD_DEFAULT, nullptr, &m_pStepSound);
 	pSoundManagerSystem->createStream("Resources/Sounds/bobomb-fuse-loop.WAV", FMOD_LOOP_NORMAL, nullptr, &m_pFumeSound);
 	pSoundManagerSystem->createStream("Resources/Sounds/bobomb-explosion.WAV", FMOD_DEFAULT, nullptr, &m_pExplodeSound);
 
@@ -87,19 +94,14 @@ void BoBombCharacter::Initialize(const SceneContext&)
 	m_pSmokeParticleSettings.maxEmitterRadius = .3f;
 	m_pSmokeParticleSettings.color = { 1.f,1.f,1.f, .6f };
 
+	Reset();
 }
 
 void BoBombCharacter::Update(const SceneContext& sceneContext)
 {
-	if (m_State != Paused)
+	if (m_State != Paused && m_pMario != nullptr)
 	{
 		const auto elapsedTime = sceneContext.pGameTime->GetElapsed();
-
-		Update3DSounds();
-
-		// The sound must fade out after it is updated (the Update3DSounds)
-		if (m_SoundFadingOut)
-			UpdateSoundFadeOut(elapsedTime);
 
 		const XMVECTOR marioDistanceVec = XMLoadFloat3(&m_pMario->GetTransform()->GetWorldPosition()) - XMLoadFloat3(&GetTransform()->GetWorldPosition());
 		XMFLOAT3 marioDistance{};
@@ -126,8 +128,10 @@ void BoBombCharacter::Update(const SceneContext& sceneContext)
 				m_pMario->m_GrabbingBobOmb = true;
 
 				m_StoppedPickUpPunch = false;
-				m_pChaseChannel->setPaused(true);
+				m_pStepChannel->setPaused(true);
 				m_State = PickedUp;
+
+				AnimateFeet(0, 0); // Make sure both feet are on the ground
 				break;
 			}
 
@@ -137,7 +141,6 @@ void BoBombCharacter::Update(const SceneContext& sceneContext)
 			{
 				// Play the SFX
 				// Only initializing the sounds here makes it so that each bobomb will play them at a unique offset
-				SoundManager::Get()->GetSystem()->playSound(m_pChaseSound, nullptr, false, &m_pChaseChannel);
 				SoundManager::Get()->GetSystem()->playSound(m_pFumeSound, nullptr, false, &m_pFumeChannel);
 				m_State = Chasing;
 			}
@@ -174,6 +177,9 @@ void BoBombCharacter::Update(const SceneContext& sceneContext)
 			//Rotate model to match direction
 			RotateMesh();
 
+			// Update walk animation
+			AnimateFeet(m_FullStepTimeWander / 2.f, elapsedTime);
+
 			break;
 
 		case Chasing:
@@ -193,8 +199,10 @@ void BoBombCharacter::Update(const SceneContext& sceneContext)
 				m_pMario->m_GrabbingBobOmb = true;
 
 				m_StoppedPickUpPunch = false;
-				m_pChaseChannel->setPaused(true);
+				m_pStepChannel->setPaused(true);
 				m_State = PickedUp;
+
+				AnimateFeet(0, 0); // Make sure both feet are on the ground
 				break;
 			}
 
@@ -222,6 +230,9 @@ void BoBombCharacter::Update(const SceneContext& sceneContext)
 
 			//Rotate model to match direction
 			RotateMesh();
+
+			// Update walk animation
+			AnimateFeet(m_FullStepTimeChase / 2.f, elapsedTime);
 
 			break;
 
@@ -300,6 +311,12 @@ void BoBombCharacter::Update(const SceneContext& sceneContext)
 		default:
 			break;
 		}
+
+		Update3DSounds();
+
+		// The sound must fade out after it is updated (the Update3DSounds)
+		if (m_SoundFadingOut)
+			UpdateSoundFadeOut(elapsedTime);
 	}
 }
 
@@ -367,7 +384,9 @@ void BoBombCharacter::RotateMesh()
 		m_Rotated += 360.0f;
 
 	m_pModelParentGO->GetTransform()->Rotate(0.f, m_Rotated, 0);
-	m_pModelGO->GetTransform()->Rotate(0.f, 30.f, 0);
+	m_pModelBodyGO->GetTransform()->Rotate(0.f, 30.f, 0);
+	m_pModelFootLeftGO->GetTransform()->Rotate(0.f, 30.f, 0);
+	m_pModelFootRightGO->GetTransform()->Rotate(0.f, 30.f, 0);
 }
 
 void BoBombCharacter::StickToMario()
@@ -427,7 +446,7 @@ bool BoBombCharacter::CheckIfGrounded() const
 	origin.y = m_pControllerComponent->GetTransform()->GetPosition().y; // - m_CharacterDesc.controller.height;
 	origin.z = m_pControllerComponent->GetTransform()->GetPosition().z; // - m_CharacterDesc.controller.height;
 	const auto direction = PxVec3(0, -1, 0);
-	const PxReal maxDistance = 0.12f;//m_CharacterDesc.controller.height;
+	const PxReal maxDistance = m_BoBombDesc.controller.height / 2.f;
 	PxRaycastBuffer hit;
 	PxQueryFilterData filterData{};
 	filterData.data.word0 = UINT(CollisionGroup::Group9);
@@ -438,7 +457,7 @@ bool BoBombCharacter::CheckIfGrounded() const
 
 void BoBombCharacter::Reset()
 {
-	m_pChaseChannel->setPaused(true);
+	m_pStepChannel->setPaused(true);
 	m_pFumeChannel->setPaused(true);
 	m_pExplodeChannel->setPaused(true);
 	m_SoundFadeOutCounter = 0.0f;
@@ -463,6 +482,11 @@ void BoBombCharacter::Reset()
 	m_WanderChangeCounter = 0.0f;
 	m_LitFuseCounter = 0.0f;
 	m_StoppedPickUpPunch = false;
+
+	m_LeftFootUp = false;
+	m_FootAscending = true;
+	m_StepTimer = 0.f;
+	AnimateFeet(0, 0); // Make sure both feet are on the ground
 }
 
 void BoBombCharacter::Update3DSounds()
@@ -475,7 +499,7 @@ void BoBombCharacter::Update3DSounds()
 	if (intendedVolume <= 0.0f)
 		intendedVolume = 0.0f;
 	
-	m_pChaseChannel->setVolume(intendedVolume);
+	m_pStepChannel->setVolume(intendedVolume);
 	m_pFumeChannel->setVolume(intendedVolume);
 	m_pExplodeChannel->setVolume(intendedVolume);
 	m_CurrentChaseVol = intendedVolume;
@@ -492,8 +516,8 @@ void BoBombCharacter::TogglePause(bool paused)
 			m_StateBeforePause = m_State;
 			m_State = Paused;
 
-			m_pChaseChannel->getPaused(&m_ChasePlayingBeforePause);
-			m_pChaseChannel->setPaused(true);
+			m_pStepChannel->getPaused(&m_StepPlayingBeforePause);
+			m_pStepChannel->setPaused(true);
 			m_pFumeChannel->getPaused(&m_FumePlayingBeforePause);
 			m_pFumeChannel->setPaused(true);
 			m_pExplodeChannel->getPaused(&m_ExplodePlayingBeforePause);
@@ -506,7 +530,7 @@ void BoBombCharacter::TogglePause(bool paused)
 	else
 	{
 		m_State = m_StateBeforePause;
-		m_pChaseChannel->setPaused(m_ChasePlayingBeforePause);
+		m_pStepChannel->setPaused(m_StepPlayingBeforePause);
 		m_pFumeChannel->setPaused(m_FumePlayingBeforePause);
 		m_pExplodeChannel->setPaused(m_ExplodePlayingBeforePause);
 
@@ -532,9 +556,76 @@ void BoBombCharacter::UpdateSoundFadeOut(float elapsedTime)
 		m_SoundFadeOutCounter = 0.0f;
 	}
 
-	m_pChaseChannel->setVolume(m_CurrentChaseVol * currentVolPercent);
+	m_pStepChannel->setVolume(m_CurrentChaseVol * currentVolPercent);
 	m_pFumeChannel->setVolume(m_CurrentFumeVol * currentVolPercent);
 	m_pExplodeChannel->setVolume(m_CurrentExplodeVol * currentVolPercent);
 }
 
+void BoBombCharacter::AnimateFeet(float timeForHalfStep, float elapsedTime)
+{
+	// To simulate a walk cycle, one foot at a time should go up and down in an arc,
+	// while its pair stays fixed on the ground, just going back and forth.
+
+	// Switching between which foot moves vertically, while still having both
+	// moving back and forth, creates the desired walk animation
+
+	// If "timeForHalfStep" is 0, then both feet should stay down with an early return
+	if (timeForHalfStep == 0)
+	{
+		m_pModelFootLeftGO->GetTransform()->Translate(0, 0, 0);
+		m_pModelFootRightGO->GetTransform()->Translate(0, 0, 0);
+		return;
+	}
+
+	// If the timer runs out (aka, either one foot has reached the max height, or landed after a full step)
+	// switch foot ascension order (in the 1st case start descending the foot, in the 2nd switch vertically-locked foot)
+	m_StepTimer += elapsedTime;
+	if (m_StepTimer >= timeForHalfStep)
+	{
+		if (m_FootAscending == false)
+		{
+			m_LeftFootUp = !m_LeftFootUp;
+			m_FootAscending = true;
+			SoundManager::Get()->GetSystem()->playSound(m_pStepSound, nullptr, false, &m_pStepChannel);
+		}
+		else
+		{
+			m_FootAscending = false;
+		}
+
+		m_StepTimer = 0.f;
+	}
+
+	// Calculate the position of each foot
+	const auto animProgressPerc = m_StepTimer / timeForHalfStep;
+	const auto ascendingFootPos = m_MaxFootHeight * animProgressPerc;
+	const auto descendingFootPos = m_MaxFootHeight - ascendingFootPos;
+
+	if (m_LeftFootUp)
+	{
+		if (m_FootAscending)
+		{
+			m_pModelFootLeftGO->GetTransform()->Translate(-descendingFootPos * m_FeetHorizToVertMovRatio, ascendingFootPos, 0);
+			m_pModelFootRightGO->GetTransform()->Translate(descendingFootPos * m_FeetHorizToVertMovRatio, 0, 0);
+		}
+		else
+		{
+			m_pModelFootLeftGO->GetTransform()->Translate(ascendingFootPos * m_FeetHorizToVertMovRatio, descendingFootPos, 0);
+			m_pModelFootRightGO->GetTransform()->Translate(-ascendingFootPos * m_FeetHorizToVertMovRatio, 0, 0);
+		}
+	}
+	else
+	{
+		if (m_FootAscending)
+		{
+			m_pModelFootRightGO->GetTransform()->Translate(-descendingFootPos * m_FeetHorizToVertMovRatio, ascendingFootPos, 0);
+			m_pModelFootLeftGO->GetTransform()->Translate(descendingFootPos * m_FeetHorizToVertMovRatio, 0, 0);
+		}
+		else
+		{
+			m_pModelFootRightGO->GetTransform()->Translate(ascendingFootPos * m_FeetHorizToVertMovRatio, descendingFootPos, 0);
+			m_pModelFootLeftGO->GetTransform()->Translate(-ascendingFootPos * m_FeetHorizToVertMovRatio, 0, 0);
+		}
+	}
+}
 

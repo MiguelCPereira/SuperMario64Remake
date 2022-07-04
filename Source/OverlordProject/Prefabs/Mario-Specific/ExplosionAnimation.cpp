@@ -34,7 +34,8 @@ void ExplosionAnimation::Update(const SceneContext& sceneContext)
 		// Delete the object if the animation's finished
 		if(m_SpriteCounter >= m_FrameNumber - 1)
 		{
-			GetScene()->RemoveChild(this, true);
+			SetAwaitingDeletion(true);
+			//GetScene()->RemoveChild(this, true);
 			return;
 		}
 

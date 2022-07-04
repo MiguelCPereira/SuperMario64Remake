@@ -36,11 +36,13 @@ void ChainchompCharacter::Initialize(const SceneContext&)
 	auto* pSoundManagerSystem = SoundManager::Get()->GetSystem();
 	pSoundManagerSystem->createStream("Resources/Sounds/chainchomp-chain.wav", FMOD_DEFAULT, nullptr, &m_pChainSound);
 	pSoundManagerSystem->createStream("Resources/Sounds/chainchomp-lunge.wav", FMOD_DEFAULT, nullptr, &m_pLungingSound);
+
+	Reset();
 }
 
 void ChainchompCharacter::Update(const SceneContext& sceneContext)
 {
-	if (m_State != Paused)
+	if (m_State != Paused && m_pMario != nullptr)
 	{
 		const auto elapsedTime = sceneContext.pGameTime->GetElapsed();
 
@@ -50,18 +52,11 @@ void ChainchompCharacter::Update(const SceneContext& sceneContext)
 		float marioDistanceLength = 0.0f;
 		XMStoreFloat(&marioDistanceLength, XMVector3Length(marioDistanceVec));
 
-		//Update3DSound(marioDistanceLength);
-
-		// The sound must fade out after it is updated (the Update3DSounds)
-		//if (m_SoundFadingOut)
-		//	UpdateSoundFadeOut(elapsedTime);
-
-
-
 		float toCenterLength{};
 		XMFLOAT2 toCenterDirection{};
 		float toTargetLength{};
 		XMFLOAT2 toTargetDirection{};
+
 		switch (m_State)
 		{
 		case Idle:

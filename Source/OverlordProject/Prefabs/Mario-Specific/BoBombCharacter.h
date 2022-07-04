@@ -8,7 +8,7 @@ struct BoBombDesc
 	BoBombDesc(
 		PxMaterial* pMaterial,
 		float radius = 1.f,
-		float height = 0.6f)
+		float height = 0.4f)
 	{
 		controller.setToDefault();
 		controller.radius = radius;
@@ -51,7 +51,9 @@ protected:
 
 private:
 	GameObject* m_pModelParentGO{};
-	GameObject* m_pModelGO{};
+	GameObject* m_pModelBodyGO{};
+	GameObject* m_pModelFootLeftGO{};
+	GameObject* m_pModelFootRightGO{};
 	ControllerComponent* m_pControllerComponent{};
 
 	BoBombDesc m_BoBombDesc;
@@ -101,13 +103,13 @@ private:
 
 
 	// SFX
-	FMOD::Channel* m_pChaseChannel{};
-	FMOD::Sound* m_pChaseSound{};
+	FMOD::Channel* m_pStepChannel{};
+	FMOD::Sound* m_pStepSound{};
 	FMOD::Channel* m_pFumeChannel{};
 	FMOD::Sound* m_pFumeSound{};
 	FMOD::Channel* m_pExplodeChannel{};
 	FMOD::Sound* m_pExplodeSound{};
-	const float m_SoundStartDistance{ 30.f };
+	const float m_SoundStartDistance{ 35.f };
 	float m_CurrentChaseVol{ 1.f };
 	float m_CurrentFumeVol{ 1.f };
 	float m_CurrentExplodeVol{ 1.f };
@@ -115,7 +117,7 @@ private:
 
 	// Pause Logic
 	BobOmbState m_StateBeforePause{ Wandering };
-	bool m_ChasePlayingBeforePause{ false };
+	bool m_StepPlayingBeforePause{ false };
 	bool m_FumePlayingBeforePause{ false };
 	bool m_ExplodePlayingBeforePause{ false };
 
@@ -125,6 +127,16 @@ private:
 	float m_SoundTotalFadeTime{};
 	float m_SoundFadeOutCounter{};
 	void UpdateSoundFadeOut(float elapsedTime);
+
+
+	// Walking Animation Logic
+	const float m_MaxFootHeight{ 2.f };
+	const float m_FeetHorizToVertMovRatio{ 2.5f };
+	const float m_FullStepTimeWander{ 0.7f };
+	const float m_FullStepTimeChase{ 0.25f };
+	bool m_LeftFootUp{};
+	bool m_FootAscending{ true };
+	float m_StepTimer{};
 
 
 	// Others
@@ -143,6 +155,7 @@ private:
 	bool UpdateLitFuseCounter(float elapsedTime);
 	bool CheckIfGrounded() const;
 	void Update3DSounds();
+	void AnimateFeet(float timeForHalfStep, float elapsedTime);
 };
 
 

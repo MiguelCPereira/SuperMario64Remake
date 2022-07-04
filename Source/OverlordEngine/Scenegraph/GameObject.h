@@ -48,6 +48,8 @@ public:
 
 	void SetOnTriggerCallBack(PhysicsCallback callback);
 
+	bool GetAwaitingDeletion() const { return m_AwaitingDeletion; }
+
 #pragma region
 	template <class T>
 	bool HasComponent(bool searchChildren = false)
@@ -141,6 +143,8 @@ protected:
 	virtual void OnSceneAttach(GameScene* /*pScene*/){}
 	virtual void OnSceneDetach(GameScene* /*pScene*/){}
 
+	void SetAwaitingDeletion(bool waitingDel) { m_AwaitingDeletion = waitingDel; }
+
 private:
 	friend class GameScene; //Handles private interface
 
@@ -165,4 +169,6 @@ private:
 	TransformComponent* m_pTransform{};
 	PhysicsCallback m_OnTriggerCallback{};
 	std::wstring m_Tag{};
+
+	bool m_AwaitingDeletion{};
 };

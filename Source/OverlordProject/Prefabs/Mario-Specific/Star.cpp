@@ -23,11 +23,13 @@ void Star::Initialize(const SceneContext&)
 	//Sounds
 	SoundManager::Get()->GetSystem()->createStream("Resources/Sounds/star-idle.wav", FMOD_LOOP_NORMAL, nullptr, &m_pIdleSound);
 	SoundManager::Get()->GetSystem()->createStream("Resources/Sounds/star-caught.WAV", FMOD_DEFAULT, nullptr, &m_pPickedUpSound);
+
+	Reset();
 }
 
 void Star::Update(const SceneContext& sceneContext)
 {
-	if (m_Paused == false)
+	if (m_Paused == false && m_pMario != nullptr)
 	{
 		const auto elapsedTime = sceneContext.pGameTime->GetElapsed();
 

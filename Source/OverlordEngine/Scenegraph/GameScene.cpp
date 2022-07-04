@@ -140,11 +140,29 @@ void GameScene::RootUpdate()
 	//User-Scene Update
 	Update();
 
-	//Root-Scene Update
-	for (const auto pChild : m_pChildren)
+	//Delete awaiting children
+	for (int i = int(m_pChildren.size()); i > 0; i--)
 	{
-		pChild->RootUpdate(m_SceneContext);
+		if (m_pChildren[i - 1]->GetAwaitingDeletion())
+		{
+			//Reset object parent pointer
+			m_pChildren[i - 1]->m_pParentObject = nullptr;
+
+			//Signal object (Parent Detached)
+			m_pChildren[i - 1]->OnParentDetach(m_pChildren[i - 1]);
+
+			//Signal object and children if detached from scenegraph (Scene Detached)
+			m_pChildren[i - 1]->RootOnSceneDetach(this);
+
+			SafeDelete(m_pChildren[i - 1]);
+
+			m_pChildren.erase(m_pChildren.begin() + i - 1);
+		}
 	}
+
+	//Root-Scene Update
+	for(auto* pChild : m_pChildren)
+		pChild->RootUpdate(m_SceneContext);
 
 	m_pPhysxProxy->Update(m_SceneContext);
 }

@@ -145,6 +145,8 @@ void MarioCharacter::Initialize(const SceneContext& sceneContext)
 	m_pAnimator->SetAnimation(L"FrontFlip");
 	m_pAnimator->SetAnimationSpeed(1.2f);
 	m_pAnimator->Play(true);
+
+	Reset();
 }
 
 void MarioCharacter::Update(const SceneContext& sceneContext)

@@ -20,7 +20,7 @@ GoombaCharacter::GoombaCharacter(const GoombaDesc& characterDesc, MarioCharacter
 
 void GoombaCharacter::GetSquished()
 {
-	m_pChaseChannel->setPaused(true);
+	m_pStepChannel->setPaused(true);
 	SoundManager::Get()->GetSystem()->playSound(m_pJumpedOnSound, nullptr, false, &m_pSFXChannel);
 
 	// Spawn squished goomba
@@ -37,7 +37,9 @@ void GoombaCharacter::GetSquished()
 		RemoveComponent(m_pControllerComponent, true);
 		m_pControllerComponent = nullptr;
 	}
-	GetParent()->RemoveChild(this, true);
+	//GetParent()->RemoveChild(this, true);
+
+	SetAwaitingDeletion(true);
 }
 
 void GoombaCharacter::Initialize(const SceneContext&)
@@ -50,32 +52,34 @@ void GoombaCharacter::Initialize(const SceneContext&)
 	const auto pCharacterMaterial = MaterialManager::Get()->CreateMaterial<DiffuseMaterial_Shadow>();
 	pCharacterMaterial->SetDiffuseTexture(L"Textures/Goomba_Diffuse.png");
 	m_pModelParentGO = AddChild(new GameObject);
-	m_pModelGO = m_pModelParentGO->AddChild(new GameObject);
-	const auto model = m_pModelGO->AddComponent(new ModelComponent(L"Meshes/Goomba/Goomba.ovm"));
-	model->SetMaterial(pCharacterMaterial);
+	m_pModelBodyGO = m_pModelParentGO->AddChild(new GameObject);
+	const auto modelBody = m_pModelBodyGO->AddComponent(new ModelComponent(L"Meshes/Goomba/GoombaBody.ovm"));
+	modelBody->SetMaterial(pCharacterMaterial);
+	m_pModelFootLeftGO = m_pModelParentGO->AddChild(new GameObject);
+	const auto modelFootL = m_pModelFootLeftGO->AddComponent(new ModelComponent(L"Meshes/Goomba/GoombaFootL.ovm"));
+	modelFootL->SetMaterial(pCharacterMaterial);
+	m_pModelFootRightGO = m_pModelParentGO->AddChild(new GameObject);
+	const auto modelFootR = m_pModelFootRightGO->AddComponent(new ModelComponent(L"Meshes/Goomba/GoombaFootR.ovm"));
+	modelFootR->SetMaterial(pCharacterMaterial);
 	m_pModelParentGO->GetTransform()->Scale(m_OriginalSize, m_OriginalSize, m_OriginalSize);
-	m_pModelParentGO->GetTransform()->Translate(0, -m_GoombaDesc.controller.height / 2.f - 1.f, 0);
+	m_pModelParentGO->GetTransform()->Translate(0, -m_GoombaDesc.controller.height / 2.f - 1.1f, 0);
 
 
 	//Sound
 	auto* pSoundManagerSystem = SoundManager::Get()->GetSystem();
-	pSoundManagerSystem->createStream("Resources/Sounds/goomba-run.mp3", FMOD_LOOP_NORMAL, nullptr, &m_pChaseSound);
+	pSoundManagerSystem->createStream("Resources/Sounds/goomba-run.mp3", FMOD_DEFAULT, nullptr, &m_pStepSound);
 	pSoundManagerSystem->createStream("Resources/Sounds/goomba-flattened.wav", FMOD_DEFAULT, nullptr, &m_pJumpedOnSound);
 	pSoundManagerSystem->createStream("Resources/Sounds/goomba-alert.mp3", FMOD_DEFAULT, nullptr, &m_pAlertSound);
 	pSoundManagerSystem->createStream("Resources/Sounds/goomba-punched.wav", FMOD_DEFAULT, nullptr, &m_pPunchedSound);
+
+	Reset();
 }
 
 void GoombaCharacter::Update(const SceneContext& sceneContext)
 {
-	if (m_State != Paused)
+	if (m_State != Paused && m_pMario != nullptr)
 	{
 		const auto elapsedTime = sceneContext.pGameTime->GetElapsed();
-
-		Update3DSounds();
-
-		// The sound must fade out after it is updated (the Update3DSounds)
-		if (m_SoundFadingOut)
-			UpdateSoundFadeOut(elapsedTime);
 
 		const XMVECTOR marioDistanceVec = XMLoadFloat3(&m_pMario->GetTransform()->GetWorldPosition()) - XMLoadFloat3(&GetTransform()->GetWorldPosition());
 		XMFLOAT3 marioDistance{};
@@ -99,6 +103,11 @@ void GoombaCharacter::Update(const SceneContext& sceneContext)
 				m_TargetPosition = m_pMario->GetTransform()->GetWorldPosition();
 				m_MoveSpeed = 0.0f;
 				m_TotalVelocity.y = m_GoombaDesc.jumpSpeed; // Jump
+
+				// Make sure both feet are down
+				AnimateFeet(0, elapsedTime);
+				m_StepTimer = 0.f;
+
 				m_State = AlertJump;
 			}
 
@@ -127,24 +136,26 @@ void GoombaCharacter::Update(const SceneContext& sceneContext)
 				const XMFLOAT3 displacement = XMFLOAT3(displacement2D.x, displacement2D.y, 0.f);
 				XMStoreFloat3(&m_TargetPosition, wanderTarget + XMLoadFloat3(&displacement)); // Add the circle center position to the displacement vector to get the final target position
 			}
+
+			// Update walk animation
+			AnimateFeet(m_FullStepTimeWander / 2.f, elapsedTime);
+
 			break;
 
 		case AlertJump:
 			m_JumpCounter += elapsedTime;
 			if (m_JumpCounter > m_TimeToLeaveFloor && CheckIfGrounded())
 			{
-				// Only initializing the sound here makes it so that each goomba will play the sound at a unique offset
-				SoundManager::Get()->GetSystem()->playSound(m_pChaseSound, nullptr, false, &m_pChaseChannel);
 				m_JumpCounter = 0.0f;
 				m_State = Chasing;
 			}
+
 			break;
 
 		case Chasing:
 			//If Mario ran away, switch to wandering
 			if (marioDistanceLength > m_ChaseDistance)
 			{
-				m_pChaseChannel->setPaused(true);
 				m_WanderChangeCounter = m_WanderChangeDirInterval;
 				m_State = Wandering;
 			}
@@ -156,6 +167,10 @@ void GoombaCharacter::Update(const SceneContext& sceneContext)
 
 			// Make mario's position the target
 			m_TargetPosition = m_pMario->GetTransform()->GetWorldPosition();
+
+			// Update walk animation
+			AnimateFeet(m_FullStepTimeChase / 2.f, elapsedTime);
+
 			break;
 
 		case Punched:
@@ -204,7 +219,7 @@ void GoombaCharacter::Update(const SceneContext& sceneContext)
 				// If Mario is punching and facing the right direction, throw the goomba
 				if (m_pMario->GetState() == Punching)
 				{
-					m_pChaseChannel->setPaused(true);
+					m_pStepChannel->setPaused(true);
 					SoundManager::Get()->GetSystem()->playSound(m_pPunchedSound, nullptr, false, &m_pSFXChannel);
 					auto dmgOrigin = m_pMario->GetTransform()->GetWorldPosition();
 					dmgOrigin.y -= 5.f;
@@ -235,6 +250,13 @@ void GoombaCharacter::Update(const SceneContext& sceneContext)
 				}
 			}
 		}
+
+
+		Update3DSounds();
+
+		// The sound must fade out after it is updated (the Update3DSounds)
+		if (m_SoundFadingOut)
+			UpdateSoundFadeOut(elapsedTime);
 
 
 		// Apply the movement
@@ -306,7 +328,9 @@ void GoombaCharacter::RotateMesh()
 		m_Rotated += 360.0f;
 
 	m_pModelParentGO->GetTransform()->Rotate(0.f, m_Rotated, 0);
-	m_pModelGO->GetTransform()->Rotate(90.f, 30.f, 0);
+	m_pModelBodyGO->GetTransform()->Rotate(90.f, 30.f, 0);
+	m_pModelFootLeftGO->GetTransform()->Rotate(90.f, 30.f, 0);
+	m_pModelFootRightGO->GetTransform()->Rotate(90.f, 30.f, 0);
 }
 
 bool GoombaCharacter::CheckIfGrounded() const
@@ -331,7 +355,7 @@ void GoombaCharacter::Reset()
 
 	m_pControllerComponent->SetCollisionIgnoreGroup(CollisionGroup::None);
 	m_DamagedCounter = 0.0f;
-	m_pChaseChannel->setPaused(true);
+	m_pStepChannel->setPaused(true);
 	m_pSFXChannel->setPaused(true);
 	m_SoundFadeOutCounter = 0.0f;
 	m_SoundFadingOut = false;
@@ -341,6 +365,11 @@ void GoombaCharacter::Reset()
 	m_TargetPosition = XMFLOAT3(0, 0, 0);
 	m_TargetDirection = XMFLOAT3(1, 0, 0);
 	m_Rotated = 0.0f;
+
+	m_LeftFootUp = false;
+	m_FootAscending = true;
+	m_StepTimer = 0.f;
+	AnimateFeet(0, 0); // Make sure both feet are on the ground
 
 	m_WanderChangeCounter = 0.0f;
 	m_JumpCounter = 0.0f;
@@ -356,7 +385,7 @@ void GoombaCharacter::Update3DSounds()
 	if (intendedVolume <= 0.0f)
 		intendedVolume = 0.0f;
 
-	m_pChaseChannel->setVolume(intendedVolume);
+	m_pStepChannel->setVolume(intendedVolume);
 	m_pSFXChannel->setVolume(intendedVolume);
 	m_CurrentChaseVol = intendedVolume;
 	m_CurrentSFXVol = intendedVolume;
@@ -382,8 +411,8 @@ void GoombaCharacter::TogglePause(bool paused)
 			m_StateBeforePause = m_State;
 			m_State = Paused;
 
-			m_pChaseChannel->getPaused(&m_ChasePlayingBeforePause);
-			m_pChaseChannel->setPaused(true);
+			m_pStepChannel->getPaused(&m_StepPlayingBeforePause);
+			m_pStepChannel->setPaused(true);
 			m_pSFXChannel->getPaused(&m_SFXPlayingBeforePause);
 			m_pSFXChannel->setPaused(true);
 		}
@@ -391,7 +420,7 @@ void GoombaCharacter::TogglePause(bool paused)
 	else
 	{
 		m_State = m_StateBeforePause;
-		m_pChaseChannel->setPaused(m_ChasePlayingBeforePause);
+		m_pStepChannel->setPaused(m_StepPlayingBeforePause);
 		m_pSFXChannel->setPaused(m_SFXPlayingBeforePause);
 	}
 }
@@ -413,10 +442,77 @@ void GoombaCharacter::UpdateSoundFadeOut(float elapsedTime)
 		m_SoundFadeOutCounter = 0.0f;
 	}
 
-	m_pChaseChannel->setVolume(m_CurrentChaseVol * currentVolPercent);
+	m_pStepChannel->setVolume(m_CurrentChaseVol * currentVolPercent);
 	m_pSFXChannel->setVolume(m_CurrentSFXVol * currentVolPercent);
 }
 
+void GoombaCharacter::AnimateFeet(float timeForHalfStep, float elapsedTime)
+{
+	// To simulate a walk cycle, one foot at a time should go up and down in an arc,
+	// while its pair stays fixed on the ground, just going back and forth.
+
+	// Switching between which foot moves vertically, while still having both
+	// moving back and forth, creates the desired walk animation
+
+	// If "timeForHalfStep" is 0, then both feet should stay down with an early return
+	if(timeForHalfStep == 0)
+	{
+		m_pModelFootLeftGO->GetTransform()->Translate(0, 0, 0);
+		m_pModelFootRightGO->GetTransform()->Translate(0, 0, 0);
+		return;
+	}
+
+	// If the timer runs out (aka, either one foot has reached the max height, or landed after a full step)
+	// switch foot ascension order (in the 1st case start descending the foot, in the 2nd switch vertically-locked foot)
+	m_StepTimer += elapsedTime;
+	if (m_StepTimer >= timeForHalfStep)
+	{
+		if(m_FootAscending == false)
+		{
+			m_LeftFootUp = !m_LeftFootUp;
+			m_FootAscending = true;
+			SoundManager::Get()->GetSystem()->playSound(m_pStepSound, nullptr, false, &m_pStepChannel);
+		}
+		else
+		{
+			m_FootAscending = false;
+		}
+
+		m_StepTimer = 0.f;
+	}
+
+	// Calculate the position of each foot
+	const auto animProgressPerc = m_StepTimer / timeForHalfStep;
+	const auto ascendingFootPos = m_MaxFootHeight * animProgressPerc;
+	const auto descendingFootPos = m_MaxFootHeight - ascendingFootPos;
+
+	if(m_LeftFootUp)
+	{
+		if(m_FootAscending)
+		{
+			m_pModelFootLeftGO->GetTransform()->Translate(-descendingFootPos * m_FeetHorizToVertMovRatio, ascendingFootPos, 0);
+			m_pModelFootRightGO->GetTransform()->Translate(descendingFootPos * m_FeetHorizToVertMovRatio, 0, 0);
+		}
+		else
+		{
+			m_pModelFootLeftGO->GetTransform()->Translate(ascendingFootPos * m_FeetHorizToVertMovRatio, descendingFootPos, 0);
+			m_pModelFootRightGO->GetTransform()->Translate(-ascendingFootPos * m_FeetHorizToVertMovRatio, 0, 0);
+		}
+	}
+	else
+	{
+		if (m_FootAscending)
+		{
+			m_pModelFootRightGO->GetTransform()->Translate(-descendingFootPos * m_FeetHorizToVertMovRatio, ascendingFootPos, 0);
+			m_pModelFootLeftGO->GetTransform()->Translate(descendingFootPos * m_FeetHorizToVertMovRatio, 0, 0);
+		}
+		else
+		{
+			m_pModelFootRightGO->GetTransform()->Translate(ascendingFootPos * m_FeetHorizToVertMovRatio, descendingFootPos, 0);
+			m_pModelFootLeftGO->GetTransform()->Translate(-ascendingFootPos * m_FeetHorizToVertMovRatio, 0, 0);
+		}
+	}
+}
 
 
 

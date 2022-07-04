@@ -25,5 +25,6 @@ void SquishedGoomba::Update(const SceneContext& sceneContext)
 {
 	m_TimeCounter += sceneContext.pGameTime->GetElapsed();
 	if (m_TimeCounter > m_LifeTime)
-		GetScene()->RemoveChild(this, true);
+		SetAwaitingDeletion(true);
+		//GetScene()->RemoveChild(this, true);
 }

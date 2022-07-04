@@ -18,7 +18,7 @@ struct CannonballDesc
 	float maxMoveSpeed{ 8.f };
 	float maxFallSpeed{ 15.f };
 
-	float moveAccelerationTime{ .5f };
+	float moveAccelerationTime{ 1.f };
 	float fallAccelerationTime{ .3f };
 
 	PxCapsuleControllerDesc controller{};

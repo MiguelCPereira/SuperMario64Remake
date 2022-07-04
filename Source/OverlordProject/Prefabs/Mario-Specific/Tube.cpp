@@ -20,6 +20,8 @@ void Tube::Initialize(const SceneContext&)
 	GetTransform()->Translate(m_OriginalPosition);
 	GetTransform()->Scale(12.f, 12.f, 12.f);
 	GetTransform()->Rotate(90.f, 0.f, 0.f);
+
+	Reset();
 }
 
 void Tube::Update(const SceneContext& sceneContext)

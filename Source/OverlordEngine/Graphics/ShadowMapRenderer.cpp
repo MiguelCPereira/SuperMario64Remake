@@ -78,8 +78,16 @@ void ShadowMapRenderer::Begin(const SceneContext& sceneContext)
 	//		*viewHeight> 100.f
 	//		*nearZ>0.1f
 	//		*farZ>500.f
-	const auto viewWidth = 350.f * sceneContext.aspectRatio;
-	const auto viewHeight = 350.f;
+
+	// Ended up using a larger view, which led to less shadow quality.
+	// The reason behind this was that decreasing the view led to most of the map not being included in the rendermap.
+	// Making the light follow Mario did fix this issue, but the popping in/out of shadows in the distance looked,
+	// in my opinion, much more bizarre than just having lower-grade shadows overall
+	const auto viewWidth = 300.f * sceneContext.aspectRatio;
+	const auto viewHeight = 300.f;
+	//const auto viewWidth = 50.f * sceneContext.aspectRatio;
+	//const auto viewHeight = 50.f;
+
 	const auto nearZ = 0.1f;
 	const auto farZ = 300.f;
 	const auto projMatrix = XMMatrixOrthographicLH(viewWidth, viewHeight, nearZ, farZ);

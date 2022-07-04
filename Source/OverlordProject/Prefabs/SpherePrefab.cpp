@@ -92,6 +92,5 @@ void SpherePrefab::Initialize(const SceneContext& )
 		pMesh->AddIndex(vertCount - 1);
 	}
 
-
 	AddComponent(pMesh);
 }
