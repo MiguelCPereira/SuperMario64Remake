@@ -11,7 +11,7 @@ The fully playable version is now available under the "Build" folder.
 <br />
 <br />
 
-[![Trailer](https://github.com/MiguelCPereira/SuperMario64Remake/blob/main/Screenshots/Trailer%20Thumbnail.png)](http://www.youtube.com/watch?v=xonvrfbR3hA "Super Mario 64 Remake - Trailer")
+[![Trailer](https://github.com/MiguelCPereira/SuperMario64Remake/blob/main/Screenshots/Trailer%20Thumbnail.png)](http://www.youtube.com/watch?v=GLIYBK6TkqY "Super Mario 64 Remake - Trailer")
 
 
 
